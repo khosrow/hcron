@@ -1,0 +1,14 @@
+# use /bin/bash to run commands, instead of the default /bin/sh
+# mail any output to `paul', no matter whose crontab this is
+#
+# run five minutes after midnight, every day
+as_user=
+host=bob
+command=$HOME/bin/daily.job >> $HOME/tmp/out 2>&1
+notify_email=yahoo@yhoho
+notify_message=
+when_month=*
+when_day=*
+when_hour=0
+when_minute=5
+when_dow=*

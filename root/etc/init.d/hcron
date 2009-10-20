@@ -1,0 +1,85 @@
+#!/bin/sh
+#
+# Start/stop the hcron scheduler.
+#
+### BEGIN INIT INFO
+# Provides:          hcron
+# Required-Start:    $syslog $time
+# Required-Stop:     $syslog $time
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Server which schedules hcron events
+# Description:       hcron is a substitute for the standard UNIX cron. It provides
+#                    a number of enhancements, especially in the area of event
+#                    definition: one event per file, optionally organized
+#                    hierarchically
+### END INIT INFO
+
+PID_FILE_PATH="/var/run/hcron.pid"
+
+test -f /usr/sbin/hcron-scheduler || exit 0
+
+start() {
+    #start-stop-daemon --start --quiet --pidfile /var/run/hcron.pid --name hcron --startas /usr/sbin/hcron-scheduler -- $LSBNAMES
+    #test ! -f "${PID_FILE_PATH}" || exit 0
+    /usr/sbin/hcron-scheduler
+}
+
+stop() {
+    test -f "${PID_FILE_PATH}" || return
+    kill `cat "${PID_FILE_PATH}"`
+    rm -f "${PID_FILE_PATH}"
+}
+
+restart() {
+    #start-stop-daemon --stop --retry 5 --quiet --pidfile /var/run/hcron.pid --name hcron
+    #start-stop-daemon --start --quiet --pidfile /var/run/hcron.pid --name hcron --startas /usr/sbin/hcron-scheduler -- $LSBNAMES
+    stop
+    start
+}
+
+reload() {
+    test -f "${PID_FILE_PATH}" || exit 0
+    kill -1 `cat "${PID_FILE_PATH}"`
+}
+
+case "$1" in
+start)
+    echo -n "Starting hcron command scheduler: hcron-scheduler"
+    start
+    echo "."
+    ;;
+stop)
+    echo -n "Stopping hcron command scheduler: hcron-scheduler"
+    stop
+    echo "."
+    ;;
+restart) echo -n "Restarting hcron command scheduler: hcron-scheduler" 
+    restart
+    echo "."
+    ;;
+reload|force-reload)
+    echo -n "Reloading configuration files for hcron command scheduler: hcron-scheduler"
+    reload
+    echo "."
+    ;;
+status)
+    pid=`cat "${PID_FILE_PATH}" 2> /dev/null`
+    if [ "${pid}" = "" ]; then
+        echo "Not running."
+    else
+        psEntry=`ps -p ${pid} -o args=`
+        res=`echo "${psEntry}" | grep "hcron-scheduler"`
+        if [ "${res}" != "" ]; then
+            echo "Running."
+        else
+            echo "Not running."
+        fi
+    fi
+    ;;
+*)
+    echo "Usage: /etc/init.d/hcron {start|stop|restart|reload|force-reload|status}"
+    exit 2
+    ;;
+esac
+exit 0

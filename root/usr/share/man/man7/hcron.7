@@ -1,0 +1,50 @@
+.TH HCRON "7" "July 2009" "hcron 0.8" ""
+.SH NAME
+hcron \- Set of programs for scheduling command execution
+
+.SH DESCRIPTION
+.PP
+Hcron is part of the family of cron-like tools which schedule command
+execution. What distinguishes hcron is:
+.IP \[bu] 2
+each event is defined in its own file thereby simplifying management
+of the event definitions using filesystem tools (e.g., cp, mv)
+.IP \[bu] 2
+events may be hierarchically organized (does not affect scheduling)
+thereby providing some structure to the set of events; this can be
+useful when working with many events
+.IP \[bu] 2
+event definitions use explicit "name=value" settings thereby simplifying
+modification of event definitions using file editing tools (e.g.,
+sed)
+.IP \[bu] 2
+each event is associated with a host on which it is to execute; depending
+on the configuration, the executing on the local host may restricted
+.IP \[bu] 2
+an optional email notification can be sent upon event command execution
+
+.PP
+A converter tool (hcron-conv) is provided to help move from cron to
+hcron.
+
+.PP
+Refer to the individual manual pages for more information.
+
+.SH NOTES
+The hcron programs are written in Python and need only a basic install.
+
+.SH SEE ALSO
+hcron-conv(1), hcron-event(1), hcron-fqdn(1), hcron-scheduler(8)
+
+.SH AUTHOR
+Written by John Marshall.
+
+.SH "REPORTING BUGS"
+Report bugs to <xyz@xyz>.
+
+.SH COPYRIGHT
+Copyright \(co 2008,2009 Environment Canada.
+.br
+This is free software.  You may redistribute copies of it under the terms of
+the GNU General Public License <http://www.gnu.org/licenses/gpl.html>.
+There is NO WARRANTY, to the extent permitted by law.

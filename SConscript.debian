@@ -1,0 +1,29 @@
+#
+# SConstruct.debian
+#
+
+Import("*")
+
+PKG_NAME = "%s_%s-%s_%s.deb" % (APP_NAME, APP_VERSION, DIST, ARCH)
+
+# DEBIAN contents
+DEBIAN_DIR = "%s/DEBIAN" % BUILD_ROOT_DIR
+DEBIAN_CONTROL_FILE = "%s/DEBIAN/control" % BUILD_ROOT_DIR
+DEBIAN_CONTROL_TEMPLATE_FILE = "%s/DEBIAN/control.template" % BUILD_ROOT_DIR
+
+# copy and patch DEBIAN directory
+debian_dir = Command(DEBIAN_DIR,
+    "DEBIAN",
+    [ Copy("$TARGET", "$SOURCE"),
+        """cat %s | sed 's/Architecture.*/%s/' | sed 's/Depends.*/%s/' > %s""" %
+            (DEBIAN_CONTROL_TEMPLATE_FILE, DEBIAN_CONTROL_ARCHITECTURE,
+                DEBIAN_CONTROL_DEPENDS, DEBIAN_CONTROL_FILE)
+    ])
+
+env.Append(DEPENDENCIES = debian_dir)
+
+debian_package = Command("%s/%s" % (BUILD_HOME, PKG_NAME),
+    [],
+    """fakeroot -- dpkg-deb --build %s %s""" % (BUILD_ROOT_DIR, "$TARGET"))
+
+Depends(debian_package, env["DEPENDENCIES"])

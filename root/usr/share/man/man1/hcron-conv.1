@@ -1,0 +1,83 @@
+.TH HCRON-EVENT "1" "July 2009" "hcron 0.8" ""
+.SH NAME
+hcron-conv \- Convert between crontab and hcron event definition files
+.SH SYNOPSIS
+.B hcron-conv
+.I --to-events
+.I [options]
+.I <hostName>
+.I <crontabPath>
+.I <dirPath>
+
+.B hcron-conv
+.I --to-crontab
+.I [options]
+.I <crontabPath>
+.I <dirPath>
+
+.SH DESCRIPTION
+.PP
+hcron-conv converts between crontab and hcron event definition file
+formats.
+
+.PP
+Converting from crontab to event definitions (--to-events) takes a
+standard crontab file and generates an event definition file for each
+command, with any preceding comments carried over. Variables and percent
+sign handling are not supported.
+
+.PP
+Converting from hcron event definitions to a standard crontab file
+(--to-crontab) takes a directory containing hcron event definition
+files and generates a single crontab file. If the "host" entry is
+not empty, then a remote shell invocation is prepended to the command
+string.
+
+.PP
+crontabPath may be a file path or - (stdin).
+
+.PP
+Where --to-events parameters and options are:
+
+.IP <hostName>
+The host name used when populating the "host" entry in the event
+definition file.
+
+.IP <crontabPath>
+The crontab file. May also be -, in which case input is from stdin.
+
+.IP <dirPath>
+Path into which the event definition files are stored, with names
+starting at 0.
+
+.IP --mail <address>
+Email address used when populating the "mail" entry.
+
+.PP
+Where --to-crontab options are:
+.IP <crontabPath>
+The crontab file. May also be -, in which case output is to stdout.
+
+.IP <dirPath>
+Path from which the event definition files are read. All event
+definition files below dirPath are converted.
+
+.IP --remoteShell <shell>
+The remote shell to prepend to each command when a "host" entry is not
+empty. The default is ssh.
+
+.SH SEE ALSO
+hcron(7), hcron-event(1)
+
+.SH AUTHOR
+Written by John Marshall.
+
+.SH "REPORTING BUGS"
+Report bugs to <xyz@xyz>.
+
+.SH COPYRIGHT
+Copyright \(co 2008,2009 Environment Canada.
+.br
+This is free software.  You may redistribute copies of it under the terms of
+the GNU General Public License <http://www.gnu.org/licenses/gpl.html>.
+There is NO WARRANTY, to the extent permitted by law.

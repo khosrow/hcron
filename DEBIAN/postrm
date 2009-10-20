@@ -1,0 +1,10 @@
+#!/bin/sh
+
+set -e
+
+if [ $1 = purge ];then 
+    update-rc.d hcron remove > /dev/null
+    rm -f /etc/hcron/hcron.allow /etc/hcron/hcron.conf
+    rm -f /var/log/hcron.log
+    rm -rf /var/spool/hcron
+fi

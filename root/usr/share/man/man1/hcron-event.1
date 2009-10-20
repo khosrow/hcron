@@ -1,0 +1,255 @@
+.TH HCRON-EVENT "1" "July 2009" "hcron 0.8" ""
+.SH NAME
+hcron-event \- Create and edit hcron event definition files
+.SH SYNOPSIS
+.B hcron-event
+.I <path>
+
+.SH DESCRIPTION
+hcron-event allows one to create and edit an event definition file. In the
+case of a new file, it is populated with an empty template and opened in
+an editor. Existing files are simply opened for editing. The editor used
+is from the EDITOR environment variable, or vi.
+
+.PP
+Depending on the hcron configuration, event definition files should be
+stored under 1) each user's home directory, or 2) a special location as
+<eventsBasePath>/<userName>, below which is the following:
+
+.RS
+.nf
+\.hcron/
+    <hostName>/
+        events/
+            <dirs and files>
+    <hostName>/
+        events/
+            <dirs and files>
+    ...
+.fi
+.RE
+
+.PP
+The hcron-scheduler loads event definitions which correspond to the host
+on which it is running. All such files are read in as event definitions;
+the directory structure below events/ is for the user and is unimportant
+to hcron-scheduler.
+
+.SH EVENT DEFINTION FILE
+.PP
+Each event definition is contained in a single, plain text file. Each
+line consists of a name=value setting. Empty lines and those starting
+with # are ignored. There is no support for line continuation.
+
+.PP
+The following fields are recognized:
+
+.IP as_user
+the user name to use when contacting the host when the command is
+to be carried out as a different user; an empty setting means the
+current user
+
+.IP host
+the host on which the command is to execute
+
+.IP command
+the command to execute. See below for command environment setup.
+
+.IP notify_email
+a comma separated list of email addresses to which an email
+notification is sent whenever the event command is executed
+
+.IP notify_message
+the message to include in the email notification
+
+.IP when_month
+schedule specified as a comma-separated list of months (the
+first month is 1)
+
+.IP when_day
+as when_month, but for the day of the month (range depends
+on the month)
+
+.IP when_hour
+as when_month, but for the hour of the day (0-23)
+
+.IP when_minute
+as when_month, but for the minute of the hour (0-59)
+
+.IP when_dow
+as when_month, but for the day of the week (0-6 with Sunday
+as 0)
+
+.IP template_name
+Optional: if the value matches the last component of the event
+name, the event is ignored.
+
+.PP
+The when_* fields allow for a wilcard (*) and command-separated lists.
+
+.SS Hcron Variable Substitution
+
+.PP
+Hcron provides some variables (not environment variables) which may be
+substituted in any of the settings. This happens when the event file
+is loaded. The variables are:
+
+.IP HCRON_EVENT_NAME
+The full event name which consists of the path following the
+".../events".
+
+.IP HCRON_EVENT_NAME[<index>]
+A component of the HCRON_EVENT_NAME. The index value may be numbered
+0 to 9 (left to right), or -1 to -9 (right to left). Therefore,
+HCRON_EVENT_NAME[-1] is the last component.
+
+.IP HCRON_HOST_NAME
+The host name of the host executing hcron.
+
+.SS Template Event Definitions
+
+Template event definitions are useful when an event definition can be
+sufficiently specified using variable substitutions. Typical use cases
+are when only the host field of the event definition changes and this
+information is available from one of the components of the HCRON_EVENT_NAME.
+The required symbolic (or hard) links are then made to the template.
+
+.SS Command Environment Setup
+
+.PP
+When executing the command, the user environment is NOT set up
+automatically. It is left to the user to set up the environment
+in which the command is to run. This is advantageous because:
+
+.IP \[bu] 2
+it does not force a performance penalty for potentially unnecessary
+initialization
+
+.IP \[bu] 2
+the user may initialize the environment in a particular way, which
+may not necessarily be as in a full interactive session.
+
+.PP
+Environment initialization is shell-specific. The following may be
+used for the sh-type (e.g., sh, bash, ksh) shells:
+
+.IP ". /etc/profile"
+the system environment configuration
+
+.IP ". ~/.profile"
+the user environment configuration
+
+.PP
+The csh-type (e.g., csh, tcsh) shells use various environment
+configuration files. The following may be used:
+
+.IP "source /etc/cshrc"
+the system environment configuration
+
+.IP "source /etc/.login"
+another system environment configuration, usually done after /etc/cshrc
+
+.IP "source ~/.cshrc"
+the user environment configuration (read when a csh shell starts)
+
+.IP "source ~/.login"
+the user environment configuration (read after ~/.cshrc, at login time
+only)
+
+.PP
+See the example below which performs environment configuration.
+
+.SH EXAMPLES
+.PP
+An event definition to append "hello world" to the end of a file, at
+every 10 minutes, and send an email notification would look like:
+
+.RS
+.nf
+as_user=
+host=mymachine.xyz
+command=echo "hello world" >> /tmp/hello
+notify_email=myself@xyz
+notify_msg=Message sent!
+when_month=*
+when_day=*
+when_hour=*
+when_minute=0,10,20,30,40,50
+when_dow=*
+.fi
+.RE
+
+.PP
+An event definition to write the current environment settings to a file
+in the user's home, at 12 midnight, every day. Note: the user uses a
+sh-type shell; both the system and user profiles are read:
+
+.RS
+.nf
+as_user=
+host=mymachine.xyz
+command=. /etc/profile; . ~/.profile; rm -f ~/my_env; env > ~/my_env
+notify_email=myself@xyz
+notify_msg=~/my_env has been updated
+when_month=*
+when_day=*
+when_hour=0
+when_minute=0
+when_dow=*
+.fi
+.RE
+
+.SS Using Variable Substitution
+
+.PP
+An event definition to write run a cleanup command every 1am on a number of hosts:
+
+.RS
+.nf
+as_user=
+host=$HCRON_EVENT_NAME[-1]
+command=cleanup
+notify_email=
+notify_msg=
+when_month=*
+when_day=*
+when_hour=1
+when_minute=0
+when_dow=*
+.fi
+.RE
+
+with an event file tree of as below, with all files exactly as above:
+
+.RS
+.nf
+.../
+    events/
+        cleanup/
+            machine_room/
+                mach1.xyz.com
+                mach2.xyz.com
+                mach3.xyz.com
+                mach4.xyz.com
+.fi
+.RW
+.SH ENVIRONMENT VARIABLES
+.TP
+EDITOR
+Specifies the editor to use.
+
+.SH SEE ALSO
+hcron(7), hcron-fqdn(1), hcron-scheduler(8)
+
+.SH AUTHOR
+Written by John Marshall.
+
+.SH "REPORTING BUGS"
+Report bugs to <xyz@xyz>.
+
+.SH COPYRIGHT
+Copyright \(co 2008,2009 Environment Canada.
+.br
+This is free software.  You may redistribute copies of it under the terms of
+the GNU General Public License <http://www.gnu.org/licenses/gpl.html>.
+There is NO WARRANTY, to the extent permitted by law.

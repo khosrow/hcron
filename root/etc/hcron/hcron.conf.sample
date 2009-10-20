@@ -1,0 +1,10 @@
+# hcron.conf
+{
+    "allowLocalhost": False,
+    "commandSpawnTimeout": 15,
+    "eventsBasePath": None,
+    "logPath": "hcron.log",
+    "maxEventsPerUser": 25,
+    "smtpServer": "localhost",
+    "useSyslog": False,
+}

@@ -1,0 +1,20 @@
+Package: hcron
+Version: 0.8
+Section: admin
+Priority: optional
+Architecture: all
+Depends: python (>=2.3)
+Maintainer: John Marshall <John.Marshall@ec.gc.ca>
+Description: Hcron event scheduling tool
+ Hcron does provides a similar service to the regular cron with
+ the addition of:
+ - event definition management is simplified:
+   - events are stored, 1 per file
+   - event definitions are set according to name=value settings
+   - events may be hierarchically organized under directories within
+     the filesystem
+ - optional email notification may be sent after executing the action
+   associated with an event
+ - an event may be associated with a host onto which the event action
+   is executed; a non-local host may be required, according the
+   configuration
