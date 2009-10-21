@@ -68,7 +68,7 @@ class ConfigFile(TrackableFile):
             d = safe_eval(st)
             logLoadConfig()
         except Exception, detail:
-            logMessage("error", "Cannot load config file (%s)." % self.path)
+            logMessage("error", "Cannot load hcron.config file (%s)." % self.path)
             sys.exit(-1)
 
         self.contents = d
@@ -92,7 +92,7 @@ class AllowedUsersFile(TrackableFile):
 
             logLoadAllow()
         except Exception, detail:
-                logMessage("error", "Cannot load allow file (%s)." % self.path)
+                logMessage("error", "Cannot load hcron.allow file (%s)." % self.path)
 
         self.contents = list(set(allowedUsers))
         self.mtime = mtime
@@ -113,7 +113,7 @@ class old_AllowedUsersFile(TrackableFile):
                         allowedUsers.append(userName)
                 logLoadAllow()
             except Exception, detail:
-                logMessage("error", "Cannot load allow file (%s)." % self.path)
+                logMessage("error", "Cannot load hcron.allow file (%s)." % self.path)
         else:
             allowedUsers = [ USER_NAME ]
 
