@@ -169,13 +169,51 @@ class EventList:
                     event = Event(path, name, self.userName)
                 except Exception, detail:
                     # bad Event definition
-                    continue
+                    pass
+                    #continue
 
                 self.events[path] = event
 
-                if len(self.events) == maxEventsPerUser:
+                if len(self.events) >= maxEventsPerUser:
+                    event.reason = "maximum events reached"
                     logMessage("warning", "Reached maximum events allowed (%s)." % maxEventsPerUser)
-                    return
+
+        self.dump()
+
+    def dump(self):
+        eventListFileName = "%s/%s" % (HCRON_EVENTLISTS_DUMP_DIR, self.userName)
+
+        if not eventListFileName.startswith(HCRON_EVENTLISTS_DUMP_DIR):
+            # paranoia?
+            return
+
+        oldUmask = os.umask(0337)
+
+        try:
+            os.remove(eventListFileName)
+        except:
+            pass
+
+        try:
+            userId = pwd.getpwnam(self.userName).pw_uid
+            f = open(eventListFileName, "w+")
+            os.chown(eventListFileName, userId, 0)
+
+            events = self.events
+
+            for path in sorted(events.keys()):
+                reason = events[path].reason
+                if reason == None:
+                    f.write("accepted::%s\n" % path)
+                else:
+                    f.write("rejected:%s:%s\n" % (reason, path))
+
+            f.close()
+        except Exception, detail:
+            if f != None:
+                f.close()
+
+        os.umask(oldUmask)
 
     def printEvents(self):
         for path, event in self.events.items():
@@ -195,41 +233,53 @@ class Event:
         self.path = path
         self.userName = userName
         self.name = name
+        self.reason = None
         self.load()
 
     def load(self):
         d = {}
         masks = {}
+
         try:
-            f = open(self.path, "r")
+            try:
+                f = open(self.path, "r")
+    
+                for line in f:
+                    line = line.strip()
+    
+                    if line == "" or line.startswith("#"):
+                        continue
+    
+                    name, value = line.split("=", 1)
+                    d[name] = self.hcronVariableSubstitution(value)
+    
+                    if name.startswith("when_"):
+                        masks[WHEN_INDEXES[name]] = listStToBitmask(value, WHEN_MIN_MAX[name], WHEN_BITMASKS[name])
+    
+            except Exception, detail:
+                self.reason = "bad definition"
+                self.d = d
+                raise BadEventDefintionException("Ignored event file (%s)." % self.path)
+    
+            # enforce some fields
+            d.setdefault("template_name", None)
+    
+            # discard templates
+            if d["template_name"] == self.name.split("/")[-1]:
+                self.reason = "template"
+                self.d = d
+                raise TemplateEventDefinitionException("Ignored event file (%s). Template name (%s)." % (self.path, d["template_name"]))
+    
+            # check for full specification
+            for name in HCRON_EVENT_DEFINITION_NAMES:
+                if name not in d:
+                    self.reason = "not fully specified"
+                    self.d = d
+                    raise BadEventDefinitionException("Ignored event file (%s). Missing name (%s)." % \
+                        (self.path, name))
 
-            for line in f:
-                line = line.strip()
-
-                if line == "" or line.startswith("#"):
-                    continue
-
-                name, value = line.split("=", 1)
-                d[name] = self.hcronVariableSubstitution(value)
-
-                if name.startswith("when_"):
-                    masks[WHEN_INDEXES[name]] = listStToBitmask(value, WHEN_MIN_MAX[name], WHEN_BITMASKS[name])
-
-        except Exception, detail:
-            raise BadEventDefintionException("Ignored event file (%s)." % self.path)
-
-        # enforce some fields
-        d.setdefault("template_name", None)
-
-        # discard templates
-        if d["template_name"] == self.name.split("/")[-1]:
-            raise TemplateEventDefinitionException("Ignored event file (%s). Template name (%s)." % (self.path, d["template_name"]))
-
-        # check for full specification
-        for name in HCRON_EVENT_DEFINITION_NAMES:
-            if name not in d:
-                raise BadEventDefinitionException("Ignored event file (%s). Missing name (%s)." % \
-                    (self.path, name))
+        except:
+            pass
 
         self.d = d
         self.masks = masks
@@ -239,6 +289,9 @@ class Event:
         return """<Event name (%s) when (%s)>""" % (self.name, when)
 
     def test(self, datemasks):
+        if self.reason != None:
+            return 0
+
         masks = self.masks
         for i in xrange(len(datemasks)):
             if not (datemasks[i] & masks[i]):

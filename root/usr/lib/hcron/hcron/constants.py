@@ -47,7 +47,7 @@ HCRON_ALLOW_PATH = os.path.join(HCRON_ETC_PATH, "hcron.allow")
 HCRON_LIB_HOME = os.path.join(HCRON_VAR_PATH, "lib/hcron")
 HCRON_ALLOWED_USERS_DUMP_PATH = os.path.join(HCRON_LIB_HOME, "allowed_users.dump")
 HCRON_CONFIG_DUMP_PATH = os.path.join(HCRON_LIB_HOME, "config.dump")
-HCRON_EVENTS_DUMP_PATH = os.path.join(HCRON_LIB_HOME, "events.dump")
+HCRON_EVENT_LISTS_DUMP_DIR = os.path.join(HCRON_LIB_HOME, "event_lists")
 # var/log
 HCRON_LOG_HOME = os.path.join(HCRON_VAR_PATH, "log/hcron")
 HCRON_LOG_PATH = os.path.join(HCRON_LOG_HOME, "hcron.log")

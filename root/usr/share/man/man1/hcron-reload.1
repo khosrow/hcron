@@ -9,6 +9,17 @@ hcron-reload signals to the hcron-scheduler that the user's hcron event
 definition files should be reloaded. This step is necessary in order
 for any changes to take effect.
 
+.SH FILES
+.IP /var/lib/hcron/event_lists/<userName>
+Lists the current event lists of the associated user according to the format:
+
+.RS
+.nf
+accepted::<path>
+rejected:<reason>:<path>
+.fi
+.RE
+
 .SH SEE ALSO
 hcron(7), hcron-event(1), hcron-scheduler(8)
 

@@ -128,6 +128,8 @@ See HCRON.ALLOW above.
 .IP /etc/hcron/hcron.conf
 See HCRON.CONF above.
 
+.IP /var/lib/hcron/event_lists/<userName>
+Lists the current event lists of the associated user according to the format (see hcron-reload).
 
 .IP /var/log/hcron.log
 Default location of the log file (when useSyslog is False).
@@ -137,7 +139,7 @@ Pid file for the currently running hcron-scheduler. This is managed by
 hcron-scheduler itself.
 
 .SH SEE ALSO
-hcron(7), hcron-event(1)
+hcron(7), hcron-event(1), hcron-reload(1)
 
 .SH AUTHOR
 Written by John Marshall.

@@ -51,6 +51,7 @@ def dumpSignalHandler(num, frame):
     signal.signal(num, dumpSignalHandler)
     pp = pprint.PrettyPrinter(indent=4)
 
+    # config
     try:
         config = globals.config.get()
         f = open(HCRON_CONFIG_DUMP_PATH, "w+")
@@ -60,6 +61,7 @@ def dumpSignalHandler(num, frame):
         if f != None:
             f.close()
 
+    # allowed users
     try:
         allowedUsers = globals.allowedUsers.get()
         f = open(HCRON_ALLOWED_USERS_DUMP_PATH, "w+")
@@ -69,17 +71,11 @@ def dumpSignalHandler(num, frame):
         if f != None:
             f.close()
 
-    try:
-        ell = globals.eventListList
-        f = open(HCRON_EVENTS_DUMP_PATH, "w+")
-        for userName in sorted(ell.eventLists.keys()):
-            el = ell.eventLists[userName]
-            for path in sorted(el.events.keys()):
-                f.write("%s: %s\n" % (userName, path))
-        f.close()
-    except Exception, detail:
-        if f != None:
-            f.close()
+    # event list
+    for userName in globals.allowedUsers.get():
+        el = ell.eventLists.get(userName)
+        if el:
+            el.dump()
 
 def reloadSignalHandler(num, frame):
     logMessage("info", "Received signal to reload.")
