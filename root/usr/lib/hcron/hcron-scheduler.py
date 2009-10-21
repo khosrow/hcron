@@ -126,7 +126,7 @@ if __name__ == "__main__":
     globals.eventListList = EventListList(globals.allowedUsers.get())
 
     signal.signal(signal.SIGHUP, reloadSignalHandler)
-    signal.signal(signal.SIGUSR1, dumpSignalHandler)
+    #signal.signal(signal.SIGUSR1, dumpSignalHandler)
     signal.signal(signal.SIGTERM, quitSignalHandler)
     signal.signal(signal.SIGQUIT, quitSignalHandler)
     signal.signal(signal.SIGCHLD, signal.SIG_IGN)   # we don't care about children/zombies
