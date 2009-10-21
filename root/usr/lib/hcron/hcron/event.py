@@ -39,6 +39,26 @@ from hcron.notify import sendEmailNotification
 from hcron.execute import remoteExecute
 from hcron.logger import *
 
+def signalReload():
+    """Signal to reload.
+    """
+    import tempfile
+    from hcron.file import AllowedUsersFile, ConfigFile
+
+    globals.config = ConfigFile(HCRON_CONFIG_PATH)
+    globals.allowedUsers = AllowedUsersFile(HCRON_ALLOW_PATH)
+    config = globals.config.get()
+    signalHome = config.get("signalHome") or HCRON_SIGNAL_HOME
+    userName = pwd.getpwuid(os.getuid()).pw_name
+
+    if userName not in globals.allowedUsers.get():
+        raise Exception("Warning: You are not an allowed hcron user.")
+
+    try:
+        tempfile.mkstemp(prefix=userName, dir=signalHome)
+    except:
+        raise Exception("Error: Could not signal for reload.")
+
 def handleEvents(events):
     for event in events:
         #logMessage("info", "Processing event (%s)." % event.name)
@@ -181,9 +201,9 @@ class EventList:
         self.dump()
 
     def dump(self):
-        eventListFileName = "%s/%s" % (HCRON_EVENTLISTS_DUMP_DIR, self.userName)
+        eventListFileName = "%s/%s" % (HCRON_EVENT_LISTS_DUMP_DIR, self.userName)
 
-        if not eventListFileName.startswith(HCRON_EVENTLISTS_DUMP_DIR):
+        if not eventListFileName.startswith(HCRON_EVENT_LISTS_DUMP_DIR):
             # paranoia?
             return
 

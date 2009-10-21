@@ -9,7 +9,10 @@ hcron-event \- Create and edit hcron event definition files
 hcron-event allows one to create and edit an event definition file. In the
 case of a new file, it is populated with an empty template and opened in
 an editor. Existing files are simply opened for editing. The editor used
-is from the EDITOR environment variable, or vi.
+is from the EDITOR environment variable, or vi. Once editing is completed,
+the user is asked if a reload should signalled (see hcron-reload). If
+multiple events are being edited, only the last one should be followed
+by a reload.
 
 .PP
 Depending on the hcron configuration, event definition files should be
@@ -239,7 +242,7 @@ EDITOR
 Specifies the editor to use.
 
 .SH SEE ALSO
-hcron(7), hcron-fqdn(1), hcron-scheduler(8)
+hcron(7), hcron-fqdn(1), hcron-reload(1), hcron-scheduler(8)
 
 .SH AUTHOR
 Written by John Marshall.

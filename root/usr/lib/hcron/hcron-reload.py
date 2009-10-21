@@ -26,16 +26,12 @@ definition files.
 """
 
 # system imports
-import os
 import os.path
-import pwd
 import sys
-import tempfile
 
 # app imports
 from hcron.constants import *
-import hcron.globals as globals
-from hcron.file import AllowedUsersFile, ConfigFile
+from hcron.event import signalReload
 
 def printUsage(progName):
     print """\
@@ -62,19 +58,12 @@ if __name__ == "__main__":
     #
     # setup
     #
-    globals.config = ConfigFile(HCRON_CONFIG_PATH)
-    globals.allowedUsers = AllowedUsersFile(HCRON_ALLOW_PATH)
-    config = globals.config.get()
-    signalHome = config.get("signalHome") or HCRON_SIGNAL_HOME
 
     try:
-        userName = pwd.getpwuid(os.getuid()).pw_name
-        if userName not in globals.allowedUsers.get():
-            print "Warning: You are not an allowed hcron user."
-            sys.exit(-1)
-        tempfile.mkstemp(prefix=userName, dir=signalHome)
+        signalReload()
         print "Reload signalled for this machine (%s)." % HOST_NAME
     except Exception, detail:
-        print "Error: Could not signal for reload."
+        print detail
         sys.exit(-1)
+
     sys.exit(0)

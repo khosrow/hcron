@@ -28,6 +28,7 @@ import sys
 
 # app import
 from hcron.constants import *
+from hcron.event import signalReload
 
 # constants
 EDITOR = os.environ.get("EDITOR", "vi")
@@ -55,7 +56,19 @@ if __name__ == "__main__":
             f.write(HCRON_EVENT_DEFINITION)
             f.close()
         subprocess.call([ EDITOR, path ])
+
     except Exception, detail:
         print "Error: Problem creating event file."
+        sys.exit(-1)
+
+    try:
+        if raw_input("Reload events (y/n)? ") in [ "y" ]:
+            signalReload()
+            print "Reload signalled for this machine (%s)." % HOST_NAME
+        else:
+            print "Reload deferred."
+
+    except Exception, detail:
+        print detail
         sys.exit(-1)
 
