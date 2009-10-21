@@ -53,7 +53,7 @@ class Server:
     
         # misc
         os.chdir("/")   # / is always available
-        os.umask(0)
+        os.umask(0022)
 
     def run(self):
         minuteDelta = timedelta(minutes=1)
