@@ -47,6 +47,9 @@ Execute(Mkdir(BUILD_ROOT_DIR))
 Execute("""(cd %s; tar cf - .) | tar xf - -C %s""" % (ROOT_DIR, BUILD_ROOT_DIR))
 
 # build
-VariantDir(BUILD_SRC_DIR, SRC_DIR, duplicate=0)
-SConscript("%s/SConscript" % BUILD_SRC_DIR)
+env.Append(DEPENDENCIES = Glob(ROOT_DIR))
+env.Append(DEPENDENCIES = Glob("%s/usr/lib/hcron/*.py" % ROOT_DIR))
+env.Append(DEPENDENCIES = Glob("%s/usr/lib/hcron/hcron/*.py" % ROOT_DIR))
+#VariantDir(BUILD_SRC_DIR, SRC_DIR, duplicate=0)
+#SConscript("%s/SConscript" % BUILD_SRC_DIR)
 
