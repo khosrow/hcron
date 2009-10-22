@@ -176,7 +176,7 @@ class EventList:
         try:
             # allow read even if over NFS with root_squash;
             # catch any possible exceptions to guarantee seteuid(0)
-            os.seteuid(pwd.getpwnam(userName).pw_uid)
+            os.seteuid(pwd.getpwnam(self.userName).pw_uid)
 
             eventsHomeLen = len(eventsHome)
             maxEventsPerUser = globals.config.get().get("maxEventsPerUser", MAX_EVENTS_PER_USER)
