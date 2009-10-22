@@ -203,8 +203,8 @@ class EventList:
                         event.reason = "maximum events reached"
                         logMessage("warning", "Reached maximum events allowed (%s)." % maxEventsPerUser)
 
-        except:
-            pass
+        except Exception, detail:
+            logMessage("error", "Could not load events.")
 
         os.seteuid(0)  # guarantee return to uid 0
 
