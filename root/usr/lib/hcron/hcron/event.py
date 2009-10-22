@@ -267,8 +267,13 @@ class Event:
         self.load()
 
     def load(self):
-        d = { "when_year": "*" }
-        masks = {}
+        # default for implied "this year"
+        d = {
+            "when_year": "*",
+        }
+        masks = {
+            WHEN_INDEXES["when_year"]: listStToBitmask("*", WHEN_MIN_MAX["when_year"], WHEN_BITMASKS["when_year"]),
+        }
 
         try:
             try:
