@@ -137,6 +137,8 @@ if __name__ == "__main__":
         globals.server.run()
     except Exception, detail:
         logMessage("warning", "Unexpected exception (%s)." % detail)
+        #import traceback
+        #logMessage("warning", "trace (%s)." % traceback.format_exc())
         #print detail
         pass
 
