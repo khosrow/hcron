@@ -267,7 +267,7 @@ class Event:
         self.load()
 
     def load(self):
-        d = {}
+        d = { "when_year": "*" }
         masks = {}
 
         try:
@@ -315,7 +315,7 @@ class Event:
         self.masks = masks
 
     def __repr__(self):
-        when = "%(when_month)s %(when_day)s %(when_hour)s %(when_minute)s %(when_dow)s" % self.d
+        when = "%(when_year) %(when_month)s %(when_day)s %(when_hour)s %(when_minute)s %(when_dow)s" % self.d
         return """<Event name (%s) when (%s)>""" % (self.name, when)
 
     def test(self, datemasks):

@@ -96,7 +96,7 @@ class Server:
             t0 = time()
             hcronWeekday = now.isoweekday()
             hcronWeekDay = hcronWeekday != 7 and hcronWeekday or 0
-            datemasks = dateToBitmasks(now.month, now.day, now.hour, now.minute, hcronWeekday)
+            datemasks = dateToBitmasks(now.year, now.month, now.day, now.hour, now.minute, hcronWeekday)
             events = globals.eventListList.test(datemasks)
             if events:
                 handleEvents(events)

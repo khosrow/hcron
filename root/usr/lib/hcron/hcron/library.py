@@ -32,29 +32,17 @@ from hcron.constants import *
 import hcron.globals as globals
 
 #
-# using bitmasks makes for easy comparisons (bitwise-and), but caution
-# must be taken to account for different minimum values for each of the
-# datetime components: 0 (hour, minute, dow), 1 (month, day). Thus, the
-# for the 1 minimum components, the rightmost position is wasted.
+# bitmasks makes for easy comparisons (bitwise-and), where each value
+# is a bit (e.g., 0-5/2 == 0, 2, 4 -> 0b010101). further all ranges
+# are adjusted to start at 0 (e.g., 2009-2012 -> 0-3)
 #
-WHEN_BITMASKS = {
-    "when_month": 2**13-1,
-    "when_day": 2**32-1,
-    "when_hour": 2**25-1,
-    "when_minute": 2**61-1,
-    "when_dow": 2**8-1,
-}
 
-WHEN_INDEXES = {
-    "when_month": 0,
-    "when_day": 1,
-    "when_hour": 2,
-    "when_minute": 3,
-    "when_dow": 4,
-}
+WHEN_NAMES = [ "when_year", "when_month", "when_day", "when_hour", "when_minute", "when_dow" ]
+WHEN_INDEXES = dict([ (key, i) for i, key in enumerate(WHEN_NAMES) ])
 
 # ignore wasted 0 as required
 WHEN_MIN_MAX = {
+    "when_year": (2000, 2050),
     "when_month": (1, 12),
     "when_day": (1, 31),
     "when_hour": (0, 23),
@@ -62,7 +50,15 @@ WHEN_MIN_MAX = {
     "when_dow": (0, 6),
 }
 
-def dateToBitmasks(*m_d_h_m_dow):
+WHEN_BITMASKS = dict([(key, 2**(mx-mn)-1) for key, (mn,mx) in WHEN_MIN_MAX.items() ])
+
+def dateToBitmasks(*y_m_d_h_m_dow):
+    datemasks = []
+    for i, whenName in enumerate(WHEN_NAMES):
+        datemasks[i] = 2**(y_m_d_h_m_dow[i]-WHEN_MIN_MAX[whenName])
+    return datemasks
+
+    # no when_year
     datemasks = [ 2**x for x in m_d_h_m_dow ]
     return datemasks
 
@@ -72,8 +68,15 @@ def dateToBitmasks(*m_d_h_m_dow):
     return datemasks
     
 def listStToBitmask(st, minMax, fullBitmask):
+    """Using offset allows one to support small, but arbitrary ranges
+    as bitmasks. The following is easier to understand for offset==0
+    (e.g., hours, minutes, seconds).
+    """
     mask = 0
     mn, mx = minMax
+    offset, mn, mx = mn, 0, mx-mn   # index everything to 0
+
+    #print "offset (%s) mn (%s) mx (%s) minMax (%s)" % (offset, mn, mx, minMax)
     for el in st.split(","):
         if el == "*":
             mask = fullBitmask
@@ -87,14 +90,14 @@ def listStToBitmask(st, minMax, fullBitmask):
                 step = int(step)
 
             if rng == "*":
-                low, hi = minMax
+                low, hi = mn, mx
             else:
                 l = rng.split("-", 1)
-                low = int(l[0])
+                low = int(l[0])-offset
                 if len(l) == 1:
                     hi = low
                 else:
-                    hi = int(l[1])
+                    hi = int(l[1])-offset
             if low < mn or hi > mx:
                 raise Exception("Out of range.")
             values = range(low, hi+1, step)
