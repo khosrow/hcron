@@ -3,16 +3,28 @@
 hcron-event \- Create and edit hcron event definition files
 .SH SYNOPSIS
 .B hcron-event
-.I <path>
+.I [-c]
+.I [-y|-n]
+.I "<path> [...]"
 
 .SH DESCRIPTION
-hcron-event allows one to create and edit an event definition file. In the
+hcron-event allows one to create and edit event definition files. In the
 case of a new file, it is populated with an empty template and opened in
 an editor. Existing files are simply opened for editing. The editor used
 is from the EDITOR environment variable, or vi. Once editing is completed,
 the user is asked if a reload should signalled (see hcron-reload). If
 multiple events are being edited, only the last one should be followed
 by a reload.
+
+.PP
+Where:
+
+.IP -c
+Create event file only (if it does not already exist) and do not invoke
+editor.
+
+.IP -y|-n
+Reload or do not reload with being asked. Default is to ask.
 
 .PP
 Depending on the hcron configuration, event definition files should be

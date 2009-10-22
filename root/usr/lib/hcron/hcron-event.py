@@ -35,40 +35,68 @@ EDITOR = os.environ.get("EDITOR", "vi")
 
 def printUsage(progName):
     print """\
-usage: %s <path>
+usage: %s [-c] [-y|-n] <path> [...]
        %s [-h|--help]
 
-Create/edit an hcron event definition at the given path (note: the
-last component of the path is taken as the event name). An event
+Create/edit an hcron event definition at the given path(s) (note:
+the last component of the path is taken as the event name). An event
 definition is stored in a text file in which each field and value
-pair is set as name=value.""" % (progName, progName)
+pair is set as name=value.
+
+Where:
+-c                  create only, do not edit
+-y|-n               reload or do not reload after create/edit""" % (progName, progName)
 
 if __name__ == "__main__":
     args = sys.argv[1:]
-    if len(args) != 1 or args[0] in [ "-h", "--help" ]:
-        printUsage(PROG_NAME)
-        sys.exit(0)
+    createOnly = False
+    reload = None
 
-    try:
-        path = args[0]
-        if not os.path.exists(path):
-            f = open(path, "w")
-            f.write(HCRON_EVENT_DEFINITION)
-            f.close()
-        subprocess.call([ EDITOR, path ])
+    # parse command line
+    while args:
+        arg = args.pop(0)
 
-    except Exception, detail:
-        print "Error: Problem creating event file."
-        sys.exit(-1)
-
-    try:
-        if raw_input("Reload events (y/n)? ") in [ "y" ]:
-            signalReload()
-            print "Reload signalled for this machine (%s)." % HOST_NAME
+        if arg in [ "-h", "--help" ]:
+            printUsage(PROG_NAME)
+            sys.exit(0)
+        elif arg in [ "-y" ]:
+            reload = True
+        elif arg in [ "-n" ]:
+            reload = False
+        elif arg in [ "-c" ]:
+            createOnly = True
         else:
-            print "Reload deferred."
+            args.insert(0, arg)
+            paths = args
+            break
 
-    except Exception, detail:
-        print detail
+    if len(paths) < 1:
+        printUsage(PROG_NAME):
         sys.exit(-1)
+
+    for path in paths:
+        try:
+            if not os.path.exists(path):
+                f = open(path, "w")
+                f.write(HCRON_EVENT_DEFINITION)
+                f.close()
+
+            if not createOnly:
+                subprocess.call([ EDITOR, path ])
+
+        except Exception, detail:
+            print "Error: Problem creating/opening event file (%s)." % path
+            sys.exit(-1)
+
+    if reload in [ None, True ]:
+        try:
+            if reload == True or raw_input("Reload events (y/n)? ") in [ "y" ]:
+                signalReload()
+                print "Reload signalled for this machine (%s)." % HOST_NAME
+            else:
+                print "Reload deferred."
+    
+        except Exception, detail:
+            print detail
+            sys.exit(-1)
 
