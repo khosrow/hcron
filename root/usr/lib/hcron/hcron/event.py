@@ -173,30 +173,40 @@ class EventList:
         if eventsHome == None:
             return
 
-        eventsHomeLen = len(eventsHome)
-        maxEventsPerUser = globals.config.get().get("maxEventsPerUser", MAX_EVENTS_PER_USER)
+        try:
+            # allow read even if over NFS with root_squash;
+            # catch any possible exceptions to guarantee seteuid(0)
+            os.seteuid(pwd.getpwnam(userName).pw_uid)
 
-        for root, dirNames, fileNames in os.walk(eventsHome):
-            for fileName in fileNames:
-                if fileName.startswith("."):
-                    # ignore hidden files
-                    continue
+            eventsHomeLen = len(eventsHome)
+            maxEventsPerUser = globals.config.get().get("maxEventsPerUser", MAX_EVENTS_PER_USER)
 
-                path = os.path.join(root, fileName)
+            for root, dirNames, fileNames in os.walk(eventsHome):
+                for fileName in fileNames:
+                    if fileName.startswith("."):
+                        # ignore hidden files
+                        continue
 
-                try:
-                    name = path[eventsHomeLen+1:]
-                    event = Event(path, name, self.userName)
-                except Exception, detail:
-                    # bad Event definition
-                    pass
-                    #continue
+                    path = os.path.join(root, fileName)
 
-                self.events[path] = event
+                    try:
+                        name = path[eventsHomeLen+1:]
+                        event = Event(path, name, self.userName)
+                    except Exception, detail:
+                        # bad Event definition
+                        pass
+                        #continue
 
-                if len(self.events) >= maxEventsPerUser:
-                    event.reason = "maximum events reached"
-                    logMessage("warning", "Reached maximum events allowed (%s)." % maxEventsPerUser)
+                    self.events[path] = event
+
+                    if len(self.events) >= maxEventsPerUser:
+                        event.reason = "maximum events reached"
+                        logMessage("warning", "Reached maximum events allowed (%s)." % maxEventsPerUser)
+
+        except:
+            pass
+
+        os.seteuid(0)  # guarantee return to uid 0
 
         self.dump()
 
