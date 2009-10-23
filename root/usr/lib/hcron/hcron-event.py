@@ -23,6 +23,7 @@
 
 # system imports
 import os
+import os.path
 import subprocess
 import sys
 
@@ -32,6 +33,7 @@ from hcron.event import signalReload
 
 # constants
 EDITOR = os.environ.get("EDITOR", "vi")
+PROG_NAME = os.path.basename(sys.argv[0])
 
 def printUsage(progName):
     print """\
@@ -67,11 +69,12 @@ if __name__ == "__main__":
             createOnly = True
         else:
             args.insert(0, arg)
-            paths = args
             break
 
+    paths = args
+
     if len(paths) < 1:
-        printUsage(PROG_NAME):
+        printUsage(PROG_NAME)
         sys.exit(-1)
 
     for path in paths:
