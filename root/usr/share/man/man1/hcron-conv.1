@@ -3,14 +3,14 @@
 hcron-conv \- Convert between crontab and hcron event definition files
 .SH SYNOPSIS
 .B hcron-conv
-.I --to-events
+.B --to-events
 .I [options]
 .I <hostName>
 .I <crontabPath>
 .I <dirPath>
-
+.br
 .B hcron-conv
-.I --to-crontab
+.B --to-crontab
 .I [options]
 .I <crontabPath>
 .I <dirPath>
@@ -21,14 +21,17 @@ hcron-conv converts between crontab and hcron event definition file
 formats.
 
 .PP
-Converting from crontab to event definitions (--to-events) takes a
+Converting from crontab to event definitions
+.RB ( --to-events )
+takes a
 standard crontab file and generates an event definition file for each
 command, with any preceding comments carried over. Variables and percent
 sign handling are not supported.
 
 .PP
 Converting from hcron event definitions to a standard crontab file
-(--to-crontab) takes a directory containing hcron event definition
+.RB ( --to-crontab )
+takes a directory containing hcron event definition
 files and generates a single crontab file. If the "host" entry is
 not empty, then a remote shell invocation is prepended to the command
 string.
@@ -37,32 +40,46 @@ string.
 crontabPath may be a file path or - (stdin).
 
 .PP
-Where --to-events parameters and options are:
+Where
+.TP
+.B --to-events
+parameters and options are:
 
-.IP <hostName>
+.TP
+.I <hostName>
 The host name used when populating the "host" entry in the event
 definition file.
 
-.IP <crontabPath>
+.TP
+.I <crontabPath>
 The crontab file. May also be -, in which case input is from stdin.
 
-.IP <dirPath>
+.TP
+.I <dirPath>
 Path into which the event definition files are stored, with names
 starting at 0.
 
-.IP --mail <address>
+.TP
+.B --mail
+.I <address>
 Email address used when populating the "mail" entry.
 
 .PP
-Where --to-crontab options are:
-.IP <crontabPath>
+Where
+.B --to-crontab
+options are:
+.TP
+.I <crontabPath>
 The crontab file. May also be -, in which case output is to stdout.
 
-.IP <dirPath>
+.TP
+.I <dirPath>
 Path from which the event definition files are read. All event
 definition files below dirPath are converted.
 
-.IP --remoteShell <shell>
+.TP
+.B --remoteShell
+.I <shell>
 The remote shell to prepend to each command when a "host" entry is not
 empty. The default is ssh.
 

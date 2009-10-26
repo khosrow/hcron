@@ -1,10 +1,10 @@
-.TH HCRON-EVENT "1" "November 2009" "hcron 0.9" ""
+.TH HCRON-EVENT "1" "November 2009" "hcron 0.10" ""
 .SH NAME
 hcron-event \- Create and edit hcron event definition files
 .SH SYNOPSIS
 .B hcron-event
-.I [-c]
-.I [-y|-n]
+.RB [ -c ]
+.RB [ -y | -n ]
 .I "<path> [...]"
 
 .SH DESCRIPTION
@@ -19,11 +19,13 @@ by a reload.
 .PP
 Where:
 
-.IP -c
+.TP
+.B -c
 Create event file only (if it does not already exist) and do not invoke
 editor.
 
-.IP -y|-n
+.TP
+.B -y | -n
 Reload or do not reload with being asked. Default is to ask.
 
 .PP

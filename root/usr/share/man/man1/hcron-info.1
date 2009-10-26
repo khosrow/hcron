@@ -1,0 +1,47 @@
+.TH HCRON-FQDN "1" "November 2009" "hcron 0.10" ""
+.SH NAME
+hcron-info \- Provide hcron related information
+Print the fully qualified host name of the local machine
+.SH SYNOPSIS
+.B hcron-info
+.B --allowed
+.br
+.B hcron-info
+.B -es
+.br
+.B hcron-info
+.B --fqdn
+
+.SH DESCRIPTION
+hcron-info provides hcron related information.
+
+Where:
+.TP
+.B --allowed
+Print "yes" if user is allowed to use hcron.
+
+.TP
+.B -es
+Print the event statuses for the events defined by the current user.
+
+.TP
+.B --fqdn
+Print the fully qualified host name of the local machine which is
+used by hcron to find the events to be loaded (i.e., only those events
+defined under ~/.hcron/<hostName>).
+
+.SH SEE ALSO
+hcron(7)
+
+.SH AUTHOR
+Written by John Marshall.
+
+.SH "REPORTING BUGS"
+Report bugs to <xyz@xyz>.
+
+.SH COPYRIGHT
+Copyright \(co 2009 Environment Canada.
+.br
+This is free software.  You may redistribute copies of it under the terms of
+the GNU General Public License <http://www.gnu.org/licenses/gpl.html>.
+There is NO WARRANTY, to the extent permitted by law.
