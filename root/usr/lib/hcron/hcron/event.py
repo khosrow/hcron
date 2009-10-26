@@ -96,6 +96,10 @@ class BadEventDefinitionException(Exception):
     pass
 
 class EventListList:
+    """Event list list.
+
+    All event lists are keyed on user name.
+    """
     def __init__(self, userNames):
         logMessage("info", "Initializing events list.")
         self.load(userNames)
@@ -151,6 +155,12 @@ class EventListList:
         return events
 
 class EventList:
+    """Event list for a user.
+
+    All events are key on their name (i.e., path relative to
+    ~/.hcron/<hostName>/events).
+    """
+
     def __init__(self, userName):
         self.userName = userName
         self.load()
@@ -340,6 +350,8 @@ class Event:
         return 1
 
     def activate(self):
+        """Activate event and return next event in chain.
+        """
         asUserName = self.d.get("as_user")
         command = self.d.get("command")
         if asUserName == "":
