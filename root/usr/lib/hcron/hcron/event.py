@@ -342,7 +342,13 @@ class Event:
         self.masks = masks
 
     def __repr__(self):
-        when = "%(when_year) %(when_month)s %(when_day)s %(when_hour)s %(when_minute)s %(when_dow)s" % self.d
+        when = "%s %s %s %s %s %s" % \
+            (self.d.get("when_year"),
+                self.d.get("when_month"),
+                self.d.get("when_day"),
+                self.d.get("when_hour"),
+                self.d.get("when_minute"),
+                self.d.get("when_dow"))
         return """<Event name (%s) when (%s)>""" % (self.name, when)
 
     def test(self, datemasks):
