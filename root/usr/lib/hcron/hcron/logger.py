@@ -89,6 +89,10 @@ def logLoadAllow():
 def logLoadEvents(userName, count, elapsed):
     logAny("load-events", userName, count, elapsed)
 
+def logChainEvents(userName, eventName0, eventName1, cycleDetected=False):
+    cycleMsg = cycleDetected and " (cycle detected)" or ""
+    logAny("chain-events", userName, "%s -> %s%s" % (eventName0, eventName1, cycleMsg))
+
 def logDiscardEvents(userName, count):
     logAny("discard-events", userName, count)
 

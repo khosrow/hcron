@@ -60,12 +60,27 @@ def signalReload():
         raise Exception("Error: Could not signal for reload.")
 
 def handleEvents(events):
+    """Handle all events given and chain events as specified in the
+    events being handled.
+    """
     for event in events:
-        #logMessage("info", "Processing event (%s)." % event.name)
-        try:
-            event.activate()
-        except Exception, detail:
-            logMessage("error", "handleEvents (%s)" % detail)
+        chainedEvents = {}
+
+        while event and event not in chainedEvents:
+            chainedEvents[event] = None
+
+            #logMessage("info", "Processing event (%s)." % event.getName())
+            try:
+                nextEventName = event.activate()
+            except Exception, detail:
+                logMessage("error", "handleEvents (%s)" % detail)
+                nextEventName = None
+
+            if nextEventName != None:
+                eventList = globals.eventListList.get(event.userName)
+                nextEvent = eventList and eventList.get(nextEventName)
+                logChainEvents(event.userName, event.getName(), nextEventName, cycleDetected=(nextEvent in chainedEvents))
+                event = nextEvent
 
 def reloadEvents(signalHomeMtime):
     """Reload events for all users whose signal file mtime is <= to
@@ -379,6 +394,24 @@ class Event:
             content = self.d.get("notify_message", "")
             subject = """hcron: "%s" executed at %s@%s""" % (self.name, asUserName, hostName)
             sendEmailNotification(self.name, self.userName, toAddr, subject, content)
+
+        nextEventName = self.d.get("next_event")
+        nextEventName = nextEventName and self.resolveEventName(nextEventName)
+
+        return nextEventName
+
+    def resolveEventName(self, name):
+        """Resolve event name relative to the current event.
+        
+        1) relative to .../events
+        2) relative to the current path
+        """
+        if name.startswith("~/"):
+            name = name[2:]
+        else:
+            name = os.path.normpath(os.path.join(os.path.dirname(self.name), name))
+
+        return name
 
     def hcronVariableSubstitution(self, value):
         """Perform HCRON_* variable substitution.
