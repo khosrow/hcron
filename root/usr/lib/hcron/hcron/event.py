@@ -282,6 +282,12 @@ class Event:
         self.reason = None
         self.load()
 
+    def getName(self):
+        return self.name
+
+    def getPath(self):
+        return self.path
+
     def load(self):
         # default for implied "this year"
         d = {
