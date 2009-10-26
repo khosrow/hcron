@@ -100,6 +100,9 @@ class EventListList:
         logMessage("info", "Initializing events list.")
         self.load(userNames)
 
+    def get(self, userName):
+        return self.eventLists.get(userName)
+
     def load(self, userNames=None):
         """Load from scratch.
         """
@@ -166,6 +169,9 @@ class EventList:
 
         return path
 
+    def get(self, name):
+        return self.events.get(name)
+
     def load(self):
         self.events = {}
         eventsHome = self.getEventsHome()
@@ -197,7 +203,7 @@ class EventList:
                         pass
                         #continue
 
-                    self.events[path] = event
+                    self.events[name] = event
 
                     if len(self.events) >= maxEventsPerUser:
                         event.reason = "maximum events reached"
@@ -231,12 +237,12 @@ class EventList:
 
             events = self.events
 
-            for path in sorted(events.keys()):
-                reason = events[path].reason
+            for name in sorted(events.keys()):
+                reason = events[name].reason
                 if reason == None:
-                    f.write("accepted::%s\n" % path)
+                    f.write("accepted::%s\n" % name)
                 else:
-                    f.write("rejected:%s:%s\n" % (reason, path))
+                    f.write("rejected:%s:%s\n" % (reason, name))
 
             f.close()
         except Exception, detail:
@@ -246,8 +252,8 @@ class EventList:
         os.umask(oldUmask)
 
     def printEvents(self):
-        for path, event in self.events.items():
-            print "path (%s) event (%s)" % (path, event)
+        for name, event in self.events.items():
+            print "name (%s) event (%s)" % (name, event)
 
     def test(self, datemasks):
         events = []
