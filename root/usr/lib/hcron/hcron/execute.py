@@ -29,73 +29,118 @@ import os
 import pwd
 import signal
 import subprocess
+import time
 
 # app imports
 from hcron.constants import *
 import hcron.globals as globals
 from hcron.logger import *
 
+# global
+childPid = None
+
 class RemoteExecuteException(Exception):
     pass
 
 def alarmHandler(signum, frame):
+    global childPid
+
     logAlarm()
-    os._exit(0)
+    os.kill(childPid)
 
-def __remoteExecute(remoteUserName, remoteHostName, command):
-    """Switch to localUserName and remote execute a command at
-    remoteUserName@remoteHostName.
+def remoteExecute(eventName, localUserName, remoteUserName, remoteHostName, command, timeout=None):
+    """Securely execute a command at remoteUserName@remoteHostName from
+    localUserName@localhost within timeout time.
 
-    ssh options used with explanations from ssh man page:
-    -f              requests ssh to go to background just before
-                    command execution (implies -n)
-    -l <login_name> specifies the user to log in as on the remote
-                    machine              
-    -n              redirects stdin from /dev/null (actually, prevents
-                    reading from stdin)
-    -t              force pseudo-tty allocation
+    Two approaches are coded below:
+        1) poll+sleep
+        2) signal+wait
+
+    childPid is a module global, accessible to the alarmHandler.
+
+    Return values:
+    0   okay
+    -1  error/failure
     """
+    global childPid
+
+    # setup
     config = globals.config.get()
+    allowLocalhost = config.get("allowLocalhost", False) 
+    localUid = pwd.getpwnam(localUserName).pw_uid
     remoteShellType = config.get("remoteShellType", REMOTE_SHELL_TYPE)
     remoteShellExec = config.get("remoteShellExec", REMOTE_SHELL_EXEC)
-    if remoteShellType == "ssh":
-        args = [ remoteShellExec, "-f", "-t", "-l", remoteUserName, remoteHostName, command ]
-    else:
-        raise RemoteExecuteException("Unknown remote shell type (%s)." % remoteShellType)
+    timeout = timeout or globals.config.get().get("commandSpawnTimeout", COMMAND_SPAWN_TIMEOUT)
 
-    #args = [ "/bin/sleep", "100" ]
-    #logMessage("debug", "args (%s)" % str(args))
-    os.execv(args[0], args)
-
-def remoteExecute(eventName, localUserName, remoteUserName, remoteHostName, command):
-    """Securely execute a command at remoteUserName@remoteHostName from
-    localUserName@localhost.
-    """
-    config = globals.config.get()
-
-    allowLocalhost = config.get("allowLocalhost", False) 
+    # validate
     if remoteHostName in LOCAL_HOST_NAMES and not allowLocalhost:
         raise RemoteExecuteException("Execution on local host is not allowed.")
 
-    localUid = pwd.getpwnam(localUserName).pw_uid
     if localUid == 0:
         raise RemoteExecuteException("Root user not allowed to execute.")
 
+    if remoteShellType != "ssh":
+        raise RemoteExecuteException("Unknown remote shell type (%s)." % remoteShellType)
+
     logExecute(localUserName, remoteUserName, remoteHostName, eventName)
+
+    # spawn
+    retVal = -1
     if command.strip() != "":
-        if os.fork() == 0:
-            # child
-            try:
-                os.setuid(localUid)
-                os.setsid()
-                commandSpawnTimeout = globals.config.get().get("commandSpawnTimeout", COMMAND_SPAWN_TIMEOUT)
+        try:
+            args = [ remoteShellExec, "-f", "-t", "-l", remoteUserName, remoteHostName, command ]
+            childPid = os.fork()
+
+            if childPid == 0:
+                #
+                # child
+                #
+                try:
+                    os.setuid(localUid)
+                    os.setsid()
+                    os.execv(args[0], args)
+                    #retVal = subprocess.call(args)
+                except (OSError, Exception), detail:
+                    os._exit(256)
+                    retVal = 256
+
+                os._exit(retVal)
+
+                # NEVER REACHES HERE
+
+            #
+            # parent
+            #
+            if 0:
+                # poll and wait
+                while timeout > 0:
+                    waitPid, waitStatus = os.waitpid(childPid, os.WNOHANG)
+
+                    #if waitPid != 0 and os.WIFEXITED(waitStatus):
+                    if waitPid != 0:
+                        break
+
+                    time.sleep(0.01)
+                    timeout -= 0.01
+
+                else:
+                    os.kill(childPid)
+
+            else:
+                # signal and wait
                 signal.signal(signal.SIGALRM, alarmHandler)
-                signal.alarm(commandSpawnTimeout)
-                __remoteExecute(remoteUserName, remoteHostName, command)
-            except Exception, detail:
-                logMessage("error", "Execute failed  (%s)." % detail)
+                signal.alarm(timeout)
+                waitPid, waitStatus = os.waitpid(childPid, 0)
+                signal.signal(signal.SIGALRM, signal.SIG_IGN) # cancel alarm
 
-            os._exit(0)
+            if os.WIFSIGNALED(waitStatus):
+                retVal = -1
 
-    # parent
+            elif os.WIFEXITED(waitStatus):
+                retVal = (os.WEXITSTATUS(waitStatus) == 255) and -1 or 0
+
+        except Exception, detail:
+            logMessage("error", "Execute failed (%s)." % detail)
+
+    return retVal
 
