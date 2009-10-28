@@ -125,7 +125,7 @@ if __name__ == "__main__":
     #signal.signal(signal.SIGUSR1, dumpSignalHandler)
     signal.signal(signal.SIGTERM, quitSignalHandler)
     signal.signal(signal.SIGQUIT, quitSignalHandler)
-    signal.signal(signal.SIGCHLD, signal.SIG_IGN)   # we don't care about children/zombies
+    ###signal.signal(signal.SIGCHLD, signal.SIG_IGN)   # we don't care about children/zombies
 
     globals.server = Server()
     globals.server.serverize()  # don't catch SystemExit
