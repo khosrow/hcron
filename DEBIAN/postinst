@@ -4,7 +4,7 @@ set -e
 
 update-rc.d hcron defaults 89 11 >/dev/null
 
-if [ ! -x /etc/hcron/hcron.conf ]; then
+if [ ! -r /etc/hcron/hcron.conf ]; then
     cp /etc/hcron/hcron.conf.sample /etc/hcron/hcron.conf
 fi
 
