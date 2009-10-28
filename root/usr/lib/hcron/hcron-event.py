@@ -100,6 +100,6 @@ if __name__ == "__main__":
                 print "Reload deferred."
     
         except Exception, detail:
-            print detail
+            #print detail
             sys.exit(-1)
 

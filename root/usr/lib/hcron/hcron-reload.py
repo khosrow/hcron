@@ -63,7 +63,7 @@ if __name__ == "__main__":
         signalReload()
         print "Reload signalled for this machine (%s)." % HOST_NAME
     except Exception, detail:
-        print detail
+        #print detail
         sys.exit(-1)
 
     sys.exit(0)

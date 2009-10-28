@@ -75,7 +75,6 @@ def printUserEventStatus():
 
         print open(userEventListsPath, "r").read()
     except Exception, detail:
-        print detail
         print "Error: Could not read event status information."
 
 if __name__ == "__main__":
