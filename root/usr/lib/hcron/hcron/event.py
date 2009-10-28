@@ -62,25 +62,63 @@ def signalReload():
 def handleEvents(events):
     """Handle all events given and chain events as specified in the
     events being handled.
+
+    The main/parent process spawns a process for each event. Each
+    event (with its chained events) runs in its own process. This
+    allows Event to be simple (i.e., no process management, chain
+    management).
+
+    Process management (parent): we can regulate the number of
+    processes running from here, based on the number of children.
+
+    Chain management (child): we can track and call chain events
+    from here based on the return values of the event.activate.
     """
+    childPids = {}
+
     for event in events:
-        chainedEvents = {}
+        while len(childPids) > 100:
+            # reap immediate children: block wait for first, clean up others without waiting
+            pid, status = os.waitpid(0, 0)
+            del childPids[pid]
 
-        while event and event not in chainedEvents:
-            chainedEvents[event] = None
+            pid, status = os.waitpid(0, os.WNOHANG)
+            while pid != 0:
+                del childPids[pid]
+                pid, status = os.waitpid(0, os.WNOHANG)
 
-            #logMessage("info", "Processing event (%s)." % event.getName())
-            try:
-                nextEventName = event.activate()
-            except Exception, detail:
-                logMessage("error", "handleEvents (%s)" % detail)
-                nextEventName = None
+        pid = os.fork()
+        childPids[pid] = None
 
-            if nextEventName != None:
-                eventList = globals.eventListList.get(event.userName)
-                nextEvent = eventList and eventList.get(nextEventName)
-                logChainEvents(event.userName, event.getName(), nextEventName, cycleDetected=(nextEvent in chainedEvents))
-                event = nextEvent
+        if pid == 0:
+            # child
+            chainedEvents = {}
+
+            while event and event not in chainedEvents:
+                chainedEvents[event] = None
+
+                #logMessage("info", "Processing event (%s)." % event.getName())
+                try:
+                    nextEventName = event.activate()
+                except Exception, detail:
+                    logMessage("error", "handleEvents (%s)" % detail)
+                    nextEventName = None
+    
+                if nextEventName != None:
+                    eventList = globals.eventListList.get(event.userName)
+                    nextEvent = eventList and eventList.get(nextEventName)
+                    logChainEvents(event.userName, event.getName(), nextEventName, cycleDetected=(nextEvent in chainedEvents))
+                    event = nextEvent
+
+            os._exit(0)
+
+        else:
+            # parent
+            pass
+
+    while childPids:
+        pid, status = os.waitpid(0, 0)
+        del childPids[pid]
 
 def reloadEvents(signalHomeMtime):
     """Reload events for all users whose signal file mtime is <= to
@@ -386,17 +424,24 @@ class Event:
         hostName = self.d.get("host")
 
         # execute
-        remoteExecute(self.name, self.userName, asUserName, hostName, command)
+        retVal = remoteExecute(self.name, self.userName, asUserName, hostName, command)
 
-        # notify
-        toAddr = self.d.get("notify_email")
-        if toAddr:
-            content = self.d.get("notify_message", "")
-            subject = """hcron: "%s" executed at %s@%s""" % (self.name, asUserName, hostName)
-            sendEmailNotification(self.name, self.userName, toAddr, subject, content)
-
-        nextEventName = self.d.get("next_event")
-        nextEventName = nextEventName and self.resolveEventName(nextEventName)
+        if retVal == 0:
+            # success
+            # notify
+            toAddr = self.d.get("notify_email")
+            if toAddr:
+                content = self.d.get("notify_message", "")
+                subject = """hcron: "%s" executed at %s@%s""" % (self.name, asUserName, hostName)
+                sendEmailNotification(self.name, self.userName, toAddr, subject, content)
+    
+            nextEventName = self.d.get("next_event")
+            nextEventName = nextEventName and self.resolveEventName(nextEventName)
+    
+        else:
+            # child, with problem
+            nextEventName = self.d.get("failover_event")
+            nextEventName = nextEventName and self.resolveEventName(nextEventName)
 
         return nextEventName
 
