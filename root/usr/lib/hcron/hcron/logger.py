@@ -108,5 +108,8 @@ def logNotifyEmail(userName, addrs, eventName):
 def logWork(count, elapsed):
     logAny("work", "", count, elapsed)
 
+def logExit():
+    logAny("exit")
+
 def logSleep(seconds):
     logAny("sleep", "", seconds)
