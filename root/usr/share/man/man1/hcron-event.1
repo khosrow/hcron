@@ -61,74 +61,123 @@ with # are ignored. There is no support for line continuation.
 .PP
 The following fields are recognized:
 
-.IP as_user
+.TP
+.B as_user
 the user name to use when contacting the host when the command is
 to be carried out as a different user; an empty setting means the
 current user
 
-.IP host
+.TP
+.B host
 the host on which the command is to execute
 
-.IP command
+.TP
+.B command
 the command to execute. See below for command environment setup.
 
-.IP notify_email
+.TP
+.B notify_email
 a comma separated list of email addresses to which an email
 notification is sent whenever the event command is executed
 
-.IP notify_message
+.TP
+.B notify_message
 the message to include in the email notification
 
-.IP when_month
+.TP
+.B when_year
+Optional: schedule specified as a comma-separated list of years (between
+2000-2005). Default is when_year=* if not specified
+
+.TP
+.B when_month
 schedule specified as a comma-separated list of months (the
 first month is 1)
 
-.IP when_day
+.TP
+.B when_day
 as when_month, but for the day of the month (range depends
 on the month)
 
-.IP when_hour
+.TP
+.B when_hour
 as when_month, but for the hour of the day (0-23)
 
-.IP when_minute
+.TP
+.B when_minute
 as when_month, but for the minute of the hour (0-59)
 
-.IP when_dow
+.TP
+.B when_dow
 as when_month, but for the day of the week (0-6 with Sunday
 as 0)
 
-.IP template_name
+.TP
+.B template_name
 Optional: if the value matches the last component of the event
 name, the event is ignored.
 
+.TP
+.B next_event
+Optional: name of the next event to "chain" execute if the command
+is successfully spawned on the target host
+
+.TP
+.B failover_event
+Optional: name of the next event to "chain" execute if the command
+fails to be spawned on the target host
+
 .PP
 The when_* fields allow for a wilcard (*) and command-separated lists.
+
+.SS Event Chaining
+
+.PP
+A chain of events can be set up by setting the next_event and/or
+failover_event settings. The $HCRON_EVENT_CHAIN variable (see below)
+can be used to provide information about the point in the chain at
+which the event is executing. Cycles are caught and prevented.
+
+The next_event and failover_event names are relative to the executing
+event or relative to "~/.hcron/<fqHostName>/events" if the name begins
+with "/". "." and ".." components are valid.
 
 .SS Hcron Variable Substitution
 
 .PP
 Hcron provides some variables (not environment variables) which may be
-substituted in any of the settings. This happens when the event file
-is loaded. The variables are:
+substituted in the settings. Depending on the variable, this happens
+when the event file is loaded (early substitution), or just before it
+is executed (late substitution). The variables are:
 
-.IP HCRON_EVENT_NAME
+.TP
+.B "$HCRON_EVENT_CHAIN, $HCRON_EVENT_CHAIN[<index>]"
+When an event is executed, it begins an event chain. If subsequent
+events are executed via the `next_event` or `failover_event` settings,
+they are added. $HCRON_EVENT_CHAIN contains the event names,
+:-separated, which make up the event chain. The index selects
+individual event names from the chain. Negative index values are valid
+(e.g., -1 is the last element). [Late substitution: as_user, command,
+notify_message.]
+
+.TP
+.B "$HCRON_EVENT_NAME, $HCRON_EVENT_NAME[<index>]"
 The full event name which consists of the path following the
-".../events".
+".../events" is in $HCRON_EVENT_NAME. The index selects individual
+components of the /-separated event name. Again, negative index
+values are valid. [Early substitution: all attributes.]
 
-.IP HCRON_EVENT_NAME[<index>]
-A component of the HCRON_EVENT_NAME. The index value may be numbered
-0 to 9 (left to right), or -1 to -9 (right to left). Therefore,
-HCRON_EVENT_NAME[-1] is the last component.
-
-.IP HCRON_HOST_NAME
-The host name of the host executing hcron.
+.TP
+.B $HCRON_HOST_NAME
+The host name of the host executing hcron. [Early substitution: all
+attributes.]
 
 .SS Template Event Definitions
 
 Template event definitions are useful when an event definition can be
 sufficiently specified using variable substitutions. Typical use cases
 are when only the host field of the event definition changes and this
-information is available from one of the components of the HCRON_EVENT_NAME.
+information is available from one of the components of the $HCRON_EVENT_NAME.
 The required symbolic (or hard) links are then made to the template.
 
 .SS Command Environment Setup
