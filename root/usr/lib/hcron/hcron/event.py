@@ -367,7 +367,9 @@ class Event:
                         continue
     
                     name, value = line.split("=", 1)
-                    d[name] = self.hcronVariableSubstitution(value)
+                    value = self.hcronVariableSubstitution(value, "HCRON_EVENT_NAME", self.name, self.name.split("/"))
+                    value = self.hcronVariableSubstitution(value, "HCRON_HOST_NAME", socket.getfqdn(), None)
+                    d[name] = value
     
                     if name.startswith("when_"):
                         masks[WHEN_INDEXES[name]] = listStToBitmask(value, WHEN_MIN_MAX[name], WHEN_BITMASKS[name])
@@ -429,6 +431,10 @@ class Event:
             asUserName = self.userName
         hostName = self.d.get("host")
 
+        asUserName = self.hcronVariableSubstitution(asUserName, "HCRON_EVENT_CHAIN", None, eventChainNames)
+        hostName = self.hcronVariableSubstitution(hostName, "HCRON_EVENT_CHAIN", None, eventChainNames)
+        command = self.hcronVariableSubstitution(command, "HCRON_EVENT_CHAIN", None, eventChainNames)
+
         # execute
         retVal = remoteExecute(self.name, self.userName, asUserName, hostName, command)
 
@@ -438,6 +444,8 @@ class Event:
             toAddr = self.d.get("notify_email")
             if toAddr:
                 content = self.d.get("notify_message", "")
+                content = self.hcronVariableSubstitution(content, "HCRON_EVENT_CHAIN", ":".join(eventChainNames), eventChainNames)
+
                 subject = """hcron: "%s" executed at %s@%s""" % (self.name, asUserName, hostName)
                 sendEmailNotification(self.name, self.userName, toAddr, subject, content)
     
@@ -465,26 +473,26 @@ class Event:
 
         return name
 
-    def hcronVariableSubstitution(self, value):
-        """Perform HCRON_* variable substitution.
+    def hcronVariableSubstitution(self, value, varName, varValue, varValues):
+        """Perform variable substitution.
         """
-        # check for HCRON_*
-        if "$HCRON_" not in value:
+        wVarName = "$%s" % varName
+        if wVarName not in value:
             return value
 
-        # resolve HCRON_EVENT_NAME[*] then HCRON_EVENT_NAME
-        components = self.name.split("/")
-        for i in xrange(-len(components), len(components)):
-            variable = "$HCRON_EVENT_NAME[%d]" % i
-            component = components[i]
-            value = value.replace(variable, component)
+        if varValues:
+            # resolve varName[index]
+            for i in xrange(-len(varValues), len(varValues)):
+                wVarName = "$%s[%d]" % (varName, i)
+                value = value.replace(wVarName, varValues[i])
 
-        if "$HCRON_EVENT_NAME[" in value:
-            raise Exception("Variable index out of range.")
+            wVarName = "$%s[" % varName
+            if wVarName in value:
+                raise Exception("Variable index out of range.")
 
-        value = value.replace("$HCRON_EVENT_NAME", self.name)
-
-        # HCRON_HOST_NAME
-        value = value.replace("$HCRON_HOST_NAME", socket.getfqdn())
+        if varValue:
+            # resolve varName
+            wVarName = "$%s" % varName
+            value = value.replace(wVarName, varValue)
 
         return value
