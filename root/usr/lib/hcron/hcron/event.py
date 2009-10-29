@@ -92,22 +92,28 @@ def handleEvents(events):
 
         if pid == 0:
             # child
-            chainedEvents = {}
+            eventChainNames = []
 
-            while event and event not in chainedEvents:
-                chainedEvents[event] = None
+            while event:
+                eventChainNames.append(event.getName())
 
                 #logMessage("info", "Processing event (%s)." % event.getName())
                 try:
-                    nextEventName = event.activate()
+                    nextEventName = event.activate(eventChainNames)
                 except Exception, detail:
                     logMessage("error", "handleEvents (%s)" % detail)
                     nextEventName = None
     
-                if nextEventName != None:
+                if nextEventName == None:
+                    break
+
+                logChainEvents(event.userName, event.getName(), nextEventName, cycleDetected=(nextEventName in eventChainNames))
+
+                if nextEventName in eventChainNames:
+                    break
+                else:
                     eventList = globals.eventListList.get(event.userName)
                     nextEvent = eventList and eventList.get(nextEventName)
-                    logChainEvents(event.userName, event.getName(), nextEventName, cycleDetected=(nextEvent in chainedEvents))
                     event = nextEvent
 
             os._exit(0)
@@ -414,7 +420,7 @@ class Event:
                 return 0
         return 1
 
-    def activate(self):
+    def activate(self, eventChainNames=None):
         """Activate event and return next event in chain.
         """
         asUserName = self.d.get("as_user")
@@ -436,12 +442,13 @@ class Event:
                 sendEmailNotification(self.name, self.userName, toAddr, subject, content)
     
             nextEventName = self.d.get("next_event")
-            nextEventName = nextEventName and self.resolveEventName(nextEventName)
     
         else:
             # child, with problem
             nextEventName = self.d.get("failover_event")
-            nextEventName = nextEventName and self.resolveEventName(nextEventName)
+
+        # handle None, "", and valid string
+        nextEventName = nextEventName and self.resolveEventName(nextEventName.strip()) or None
 
         return nextEventName
 
