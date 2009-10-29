@@ -448,13 +448,13 @@ class Event:
     def resolveEventName(self, name):
         """Resolve event name relative to the current event.
         
-        1) relative to .../events
+        1) relative to .../events, if starts with "/"
         2) relative to the current path
         """
-        if name.startswith("~/"):
-            name = name[2:]
-        else:
-            name = os.path.normpath(os.path.join(os.path.dirname(self.name), name))
+        if not name.startswith("/"):
+            name = os.path.join("/", os.path.dirname(self.name), name)
+
+        name = os.path.normpath(name)[1:]
 
         return name
 
