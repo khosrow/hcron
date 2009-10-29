@@ -73,7 +73,7 @@ def printUserEventStatus():
         userName = pwd.getpwuid(os.getuid()).pw_name
         userEventListsPath = "%s/%s" % (HCRON_EVENT_LISTS_DUMP_DIR, userName)
 
-        print open(userEventListsPath, "r").read()
+        print open(userEventListsPath, "r").read(),
     except Exception, detail:
         print "Error: Could not read event status information."
 
