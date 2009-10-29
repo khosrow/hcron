@@ -4,11 +4,12 @@ set -e
 
 update-rc.d hcron defaults 89 11 >/dev/null
 
-if [ ! -r /etc/hcron/hcron.conf ]; then
-    cp /etc/hcron/hcron.conf.sample /etc/hcron/hcron.conf
-fi
+for name in hcron.conf hcron.allow; do
+	if [ ! -r /etc/hcron/${name} ]; then
+		cp /etc/hcron/${name}.sample /etc/hcron/${name}
+	fi
+done
 
-touch /etc/hcron/hcron.allow
 chmod a+rwx,o+t /var/spool/hcron
 
 if [ -x /etc/init.d/hcron ]; then
