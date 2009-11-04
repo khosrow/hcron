@@ -34,7 +34,7 @@ import time
 # app imports
 from hcron.constants import *
 import hcron.globals as globals
-from hcron.library import listStToBitmask, WHEN_BITMASKS, WHEN_INDEXES, WHEN_MIN_MAX
+from hcron.library import WHEN_BITMASKS, WHEN_INDEXES, WHEN_MIN_MAX, listStToBitmask, dirWalk
 from hcron.notify import sendEmailNotification
 from hcron.execute import remoteExecute
 from hcron.logger import *
@@ -255,13 +255,11 @@ class EventList:
 
             eventsHomeLen = len(eventsHome)
             maxEventsPerUser = globals.config.get().get("maxEventsPerUser", MAX_EVENTS_PER_USER)
+            namesToIgnoreCregexp = globals.config.get().get("namesToIgnoreCregexp")
+            ignoreMatchFn = namesToIgnoreCregexp and namesToIgnoreCregexp.match
 
-            for root, dirNames, fileNames in os.walk(eventsHome):
+            for root, dirNames, fileNames in dirWalk(eventsHome, ignoreMatchFn=ignoreMatchFn):
                 for fileName in fileNames:
-                    if fileName.startswith("."):
-                        # ignore hidden files
-                        continue
-
                     path = os.path.join(root, fileName)
 
                     try:

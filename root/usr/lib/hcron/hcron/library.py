@@ -112,3 +112,39 @@ def listStToBitmask(st, minMax, fullBitmask):
             break
 
     return mask
+
+# hcron-specific signature
+def dirWalk(top, topdown=True, onerror=None, ignoreMatchFn=None):
+    """This is a slightly modified version of os.walk (python v2.4).
+    """
+    from os.path import join, isdir, islink
+    from os import listdir
+
+    try:
+        names = listdir(top)
+    except error, err:
+        if onerror is not None:
+            onerror(err)
+        return
+
+    # hcron-specific
+    if ignoreMatchFn != None:
+        names = [ name for name in names if not ignoreMatchFn(name) ]
+
+    dirs, nondirs = [], []
+    for name in names:
+        if isdir(join(top, name)):
+            dirs.append(name)
+        else:
+            nondirs.append(name)
+
+    if topdown:
+        yield top, dirs, nondirs
+    for name in dirs:
+        path = join(top, name)
+        if not islink(path):
+            for x in dirWalk(path, topdown, onerror, ignoreMatchFn):
+                yield x
+    if not topdown:
+        yield top, dirs, nondirs
+

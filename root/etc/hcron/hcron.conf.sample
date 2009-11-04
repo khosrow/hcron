@@ -5,6 +5,8 @@
     "eventsBasePath": None,
     "logPath": "hcron.log",
     "maxEventsPerUser": 25,
+    # hidden files, emacs backup files
+    "namesToIgnoreRegexp": "(\..*)|(.*~$)",
     "smtpServer": "localhost",
     "useSyslog": False,
 }

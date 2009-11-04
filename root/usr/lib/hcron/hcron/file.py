@@ -28,6 +28,7 @@
 import os
 import os.path
 import pwd
+import re
 import stat
 import sys
 
@@ -70,6 +71,13 @@ class ConfigFile(TrackableFile):
         except Exception, detail:
             logMessage("error", "Cannot load hcron.config file (%s)." % self.path)
             sys.exit(-1)
+
+        # augment
+        if "namesToIgnoreRegexp" in d:
+            try:
+                d["namesToIgnoreCregexp"] = re.compile(d["namesToIgnoreRegexp"])
+            except:
+                pass
 
         self.contents = d
         self.mtime = mtime
