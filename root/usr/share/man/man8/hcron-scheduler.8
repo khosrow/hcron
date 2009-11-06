@@ -46,34 +46,48 @@ The hcron.conf file contains configuration settings for hcron-scheduler.
 It takes the form of a simplified (simple object types) Python dictionary
 with the following keys:
 
-.IP allowLocalhost
+.TP
+.B allowLocalhost
 Boolean indicating whether or not event commands may be done on the
 localhost, as specified by the host setting of the event definition.
 This restriction applies to any address which resolves to the local
 host.
 
-.IP commandSpawnTimeout
+.TP
+.B commandSpawnTimeout
 Maximum time allowed for a command to be spawned. This does not limit
 the time allowed for a command to execute, but serves to limit spawned
 processes on the hcron machine.
 
-.IP eventsBasePath
+.TP
+.B eventsBasePath
 Path below which to search for user event definitions, following the
 pattern <eventsBasePath>/<userName>. If undefined or None, user
 definitions are loaded from the user's home (~<userName>).
 
-.IP logPath
+.TP
+.B logPath
 Path of the log file, when useSyslog is False. A relative path is
 prepended with /var/log.
 
-.IP maxEventsPerUser
+.TP
+.B maxEventsPerUser
 Maximum number of events allowed per user.
 
-.IP smtpServer
+.TP
+.B namesToIgnoreRegexp
+Regular expression matching event (and directory) names to ignore when
+loading events. The default is to ignore hidden files (starting with .)
+and names ending with ~ (commonly used to name backup or temporary
+files when editing).
+
+.TP
+.B smtpServer
 Host name of an SMTP server willing to accept connections. If not
 specified, localhost is used.
 
-.IP useSyslog
+.TP
+.B useSyslog
 Boolean indicating whether or not to send the logging information to
 the syslog daemon.
 
@@ -101,6 +115,7 @@ A default hcron.conf configuration:
     "eventsBasePath": None,
     "logPath": "hcron.log",
     "maxEventsPerUser": 25,
+    "namesToIgnoreRegexp": "(\..*)|(.*~$)",
     "smtpServer": "localhost",
     "useSyslog": False,
 }
