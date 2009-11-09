@@ -50,7 +50,7 @@ WHEN_MIN_MAX = {
     "when_dow": (0, 6),
 }
 
-WHEN_BITMASKS = dict([(key, 2**(mx-mn)-1) for key, (mn,mx) in WHEN_MIN_MAX.items() ])
+WHEN_BITMASKS = dict([(key, 2**(mx-mn+1)-1) for key, (mn,mx) in WHEN_MIN_MAX.items() ])
 
 def dateToBitmasks(*y_m_d_h_m_dow):
     """Mark the bit positions for year, month, day, etc.
