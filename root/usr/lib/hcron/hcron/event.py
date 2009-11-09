@@ -355,42 +355,40 @@ class Event:
         }
 
         try:
+            # load first (in order to check for test meaningfully)
+            for line in open(self.path, "r"):
+                line = line.strip()
+    
+                if line == "" or line.startswith("#"):
+                    continue
+    
+                name, value = line.split("=", 1)
+                value = self.hcronVariableSubstitution(value, "HCRON_EVENT_NAME", self.name, self.name.split("/"))
+                value = self.hcronVariableSubstitution(value, "HCRON_HOST_NAME", socket.getfqdn(), None)
+                d[name] = value
+
+            # enforce some fields
+            d.setdefault("template_name", None)
+
+            # template check
+            if d["template_name"] == self.name.split("/")[-1]:
+                self.reason = "template"
+                raise TemplateEventDefinitionException("Ignored event file (%s). Template name (%s)." % (self.path, d["template_name"]))
+    
+            # bad definition check
             try:
-                f = open(self.path, "r")
-    
-                for line in f:
-                    line = line.strip()
-    
-                    if line == "" or line.startswith("#"):
-                        continue
-    
-                    name, value = line.split("=", 1)
-                    value = self.hcronVariableSubstitution(value, "HCRON_EVENT_NAME", self.name, self.name.split("/"))
-                    value = self.hcronVariableSubstitution(value, "HCRON_HOST_NAME", socket.getfqdn(), None)
-                    d[name] = value
-    
+                for name, value in d.items():
                     if name.startswith("when_"):
                         masks[WHEN_INDEXES[name]] = listStToBitmask(value, WHEN_MIN_MAX[name], WHEN_BITMASKS[name])
     
             except Exception, detail:
                 self.reason = "bad definition"
-                self.d = d
                 raise BadEventDefintionException("Ignored event file (%s)." % self.path)
-    
-            # enforce some fields
-            d.setdefault("template_name", None)
-    
-            # discard templates
-            if d["template_name"] == self.name.split("/")[-1]:
-                self.reason = "template"
-                self.d = d
-                raise TemplateEventDefinitionException("Ignored event file (%s). Template name (%s)." % (self.path, d["template_name"]))
-    
-            # check for full specification
+
+            # full specification check
             for name in HCRON_EVENT_DEFINITION_NAMES:
                 if name not in d:
                     self.reason = "not fully specified"
-                    self.d = d
                     raise BadEventDefinitionException("Ignored event file (%s). Missing name (%s)." % \
                         (self.path, name))
 
