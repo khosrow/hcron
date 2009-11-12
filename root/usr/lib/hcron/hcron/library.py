@@ -119,6 +119,7 @@ def dirWalk(top, topdown=True, onerror=None, ignoreMatchFn=None):
     """
     from os.path import join, isdir, islink
     from os import listdir
+    from posix import error
 
     try:
         names = listdir(top)
