@@ -367,10 +367,20 @@ class Event:
     
                 if line == "" or line.startswith("#"):
                     continue
-    
-                name, value = line.split("=", 1)
-                value = self.hcronVariableSubstitution(value, "HCRON_EVENT_NAME", self.name, self.name.split("/"))
-                value = self.hcronVariableSubstitution(value, "HCRON_HOST_NAME", socket.getfqdn(), None)
+
+                try:
+                    name, value = line.split("=", 1)
+                except Exception, detail:
+                    self.reason = "bad definition"
+                    raise BadEventDefinitionException("Ignored event file (%s)." % self.path)
+
+                try:
+                    value = self.hcronVariableSubstitution(value, "HCRON_EVENT_NAME", self.name, self.name.split("/"))
+                    value = self.hcronVariableSubstitution(value, "HCRON_HOST_NAME", socket.getfqdn(), None)
+                except Exception, detail:
+                    self.reason = "bad variable substitution"
+                    BadVariableSubstitutionException("Ignored event file (%s)." % self.path)
+
                 d[name] = value
 
             # enforce some fields
