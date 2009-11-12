@@ -389,7 +389,7 @@ class Event:
     
             except Exception, detail:
                 self.reason = "bad definition"
-                raise BadEventDefintionException("Ignored event file (%s)." % self.path)
+                raise BadEventDefinitionException("Ignored event file (%s)." % self.path)
 
             # full specification check
             for name in HCRON_EVENT_DEFINITION_NAMES:
