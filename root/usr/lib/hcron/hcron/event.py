@@ -154,6 +154,12 @@ def reloadEvents(signalHomeMtime):
 class BadEventDefinitionException(Exception):
     pass
 
+class BadVariableSubstitutionException(Exception):
+    pass
+
+class TemplateEventDefinitionException(Exception):
+    pass
+
 class EventListList:
     """Event list list.
 
