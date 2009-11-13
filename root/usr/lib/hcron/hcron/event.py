@@ -407,7 +407,7 @@ class Event:
                         masks[WHEN_INDEXES[name]] = listStToBitmask(value, WHEN_MIN_MAX[name], WHEN_BITMASKS[name])
     
             except Exception, detail:
-                self.reason = "bad definition"
+                self.reason = "bad when_* setting"
                 raise BadEventDefinitionException("Ignored event file (%s)." % self.path)
 
             # full specification check
