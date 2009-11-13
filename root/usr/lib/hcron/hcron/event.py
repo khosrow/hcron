@@ -151,6 +151,9 @@ def reloadEvents(signalHomeMtime):
             except Exception, detail:
                 logMessage("warning", "Could not remove signal file (%s)." % path)
 
+class CannotLoadFileException(Exception):
+    pass
+
 class BadEventDefinitionException(Exception):
     pass
 
@@ -362,7 +365,13 @@ class Event:
 
         try:
             # load first (in order to check for test meaningfully)
-            for line in open(self.path, "r"):
+            try:
+                lines = open(self.path, "r")
+            except Exception, detail:
+                self.reason = "cannot load file"
+                raise CannotLoadFileException("Ignored event file (%s)." % self.path)
+
+            for line in lines:
                 line = line.strip()
     
                 if line == "" or line.startswith("#"):
