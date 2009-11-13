@@ -418,7 +418,8 @@ class Event:
                         (self.path, name))
 
         except:
-            pass
+            if self.reason == None:
+                self.reason = "unknown problem"
 
         self.d = d
         self.masks = masks
