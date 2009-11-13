@@ -440,8 +440,15 @@ class Event:
 
         masks = self.masks
         for i in xrange(len(datemasks)):
-            if not (datemasks[i] & masks[i]):
+            try:
+                if not (datemasks[i] & masks[i]):
+                    return 0
+            except Exception, detail:
+                # should not get here
+                logMessage("error", "detail (%s) self.reason (%s) user (%s) name (%s) d (%s)." % \
+                    (detail, self.reason, self.userName, self.name, str(self.d)))
                 return 0
+
         return 1
 
     def activate(self, eventChainNames=None):
