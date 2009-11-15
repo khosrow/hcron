@@ -122,20 +122,27 @@ if 0:
         print "----"
 
 if 1:
+    from hcron.event import Event
+
+    e = Event("/home/ib/sss/jdm/git-repo/hcron/tests/events/mail_on_the_minute", "mail_on_the_minute", "aspgjdm")
+    print "event (%s) d (%s) masks (%s) (%s)" % (str(e), str(e.d), str(e.masks), str([(k, bin(v)) for k, v in e.masks.items()]))
+
+if 1:
     print "date match tests:"
-    start = datetime.datetime(2009, 11, 6, 0, 0)
-    end = datetime.datetime(2009, 11, 9, 0, 0)
+    start = datetime.datetime(2009, 11, 14, 23, 0)
+    end = datetime.datetime(2009, 11, 15, 2, 0)
     delta = datetime.timedelta(minutes=1)
 
-    y_m_d_h_m_dow_st = ("*", "*", "*", "*", "00,10,20,30,40,50", "*")
+    #y_m_d_h_m_dow_st = ("*", "*", "*", "*", "00,10,20,30,40,50", "*")
+    y_m_d_h_m_dow_st = ("*", "*", "*", "*", "*", "*")
     y_m_d_h_m_dow = tuple([ listStToBitmask(x, WHEN_MIN_MAX[when_name], WHEN_BITMASKS[when_name]) \
         for x, when_name in zip(y_m_d_h_m_dow_st, WHEN_NAMES) ])
     
     print "mask mask st (%s)" % str(y_m_d_h_m_dow_st)
     print "mask mask (%s)" % str([ bin(x) for x in y_m_d_h_m_dow ])
     while start < end:
-        dow = start.weekday()+1
-        dow = dow < 7 and dow or 0
+        # hcron: 0=sun, 6=sat; isoweekday: 1=mon, 7=sun
+        dow = start.isoweekday() % 7
         value = dateToBitmasks(start.year, start.month, start.day, start.hour, start.minute, dow)
 
         for v, e in zip(value, y_m_d_h_m_dow):
