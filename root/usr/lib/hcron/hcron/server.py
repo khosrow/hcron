@@ -94,8 +94,8 @@ class Server:
             # match events and act
             #
             t0 = time()
-            hcronWeekday = now.isoweekday()
-            hcronWeekDay = hcronWeekday != 7 and hcronWeekday or 0
+            # hcron: 0=sun - 6=sat; isoweekday: 1=mon = 7=sun
+            hcronWeekday = now.isoweekday() % 7
             datemasks = dateToBitmasks(now.year, now.month, now.day, now.hour, now.minute, hcronWeekday)
             events = globals.eventListList.test(datemasks)
             if events:
