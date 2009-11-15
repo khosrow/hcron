@@ -1,5 +1,5 @@
 Package: hcron
-Version: 0.12
+Version: 0.12.1
 Section: admin
 Priority: optional
 Architecture: all
