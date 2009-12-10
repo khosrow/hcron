@@ -12,7 +12,7 @@ Import("*")
 
 # general
 APP_NAME = "hcron"
-APP_VERSION = "0.12.1"
+APP_VERSION = "0.12.2"
 
 # directories
 SRC_DIR = "src"
