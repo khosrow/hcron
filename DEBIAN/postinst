@@ -10,12 +10,14 @@ for name in hcron.conf hcron.allow; do
 	fi
 done
 
-chmod a+rwx,o+t /var/spool/hcron
+if [ -x /var/spool/hcron ]; then
+	chmod a+rwx,o+t /var/spool/hcron
+fi
 
 if [ -x /etc/init.d/hcron ]; then
-    if [ -x /usr/sbin/invoke-rc.d ]; then
-        invoke-rc.d hcron start
-    else
-        /etc/init.d/hcron start
-    fi
+	if [ -x /usr/sbin/invoke-rc.d ]; then
+		invoke-rc.d hcron start
+	else
+		/etc/init.d/hcron start
+	fi
 fi
