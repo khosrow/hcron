@@ -293,6 +293,7 @@ class EventList:
             pass
 
         try:
+            f = None
             userId = pwd.getpwnam(self.userName).pw_uid
             f = open(eventListFileName, "w+")
             os.chown(eventListFileName, userId, 0)

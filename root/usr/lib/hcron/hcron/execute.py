@@ -46,7 +46,7 @@ def alarmHandler(signum, frame):
     global childPid
 
     logAlarm()
-    os.kill(childPid)
+    os.kill(childPid, signal.SIGKILL)
 
 def remoteExecute(eventName, localUserName, remoteUserName, remoteHostName, command, timeout=None):
     """Securely execute a command at remoteUserName@remoteHostName from
@@ -124,7 +124,7 @@ def remoteExecute(eventName, localUserName, remoteUserName, remoteHostName, comm
                     timeout -= 0.01
 
                 else:
-                    os.kill(childPid)
+                    os.kill(childPid, signal.SIGKILL)
 
             else:
                 # signal and wait
