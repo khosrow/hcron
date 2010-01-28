@@ -48,6 +48,7 @@ HCRON_LIB_HOME = os.path.join(HCRON_VAR_PATH, "lib/hcron")
 HCRON_ALLOWED_USERS_DUMP_PATH = os.path.join(HCRON_LIB_HOME, "allowed_users.dump")
 HCRON_CONFIG_DUMP_PATH = os.path.join(HCRON_LIB_HOME, "config.dump")
 HCRON_EVENT_LISTS_DUMP_DIR = os.path.join(HCRON_LIB_HOME, "event_lists")
+HCRON_EVENTS_SNAPSHOT_HOME = os.path.join(HCRON_LIB_HOME, "events")
 # var/log
 HCRON_LOG_HOME = os.path.join(HCRON_VAR_PATH, "log/hcron")
 HCRON_LOG_PATH = os.path.join(HCRON_LOG_HOME, "hcron.log")
@@ -56,6 +57,8 @@ HCRON_SPOOL_PATH = os.path.join(HCRON_VAR_PATH, "spool/hcron")
 HCRON_SIGNAL_HOME = HCRON_SPOOL_PATH
 
 HCRON_PID_FILE_PATH = os.path.join(HCRON_VAR_PATH, "run/hcron.pid")
+
+HCRON_MAX_EVENT_FILE_SIZE = 5000
 
 HCRON_EVENT_DEFINITION_NAMES = [
     "as_user",

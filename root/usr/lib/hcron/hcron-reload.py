@@ -28,10 +28,37 @@ definition files.
 # system imports
 import os.path
 import sys
+import os
+import pwd
+import shutil
 
 # app imports
 from hcron.constants import *
 from hcron.event import signalReload
+from hcron.file import ConfigFile
+from hcron.library import copytree, getEventsHome
+from hcron import globals
+
+def makeEventsSnapshot():
+    """This depends on python >=v2.5 which creates intermediate
+    directories as required.
+    """
+    globals.config = ConfigFile(HCRON_CONFIG_PATH)
+    eventsBasePath = globals.config.get("eventsBasePath", "").strip()
+
+    if eventsBasePath == "":
+        src = os.path.expanduser("~%s/.hcron/%s/events" % (USER_NAME, HOST_NAME))
+    else:
+        src = os.path.join(eventsBasePath, USER_NAME, ".hcron/%s/events" % HOST_NAME)
+
+    dst = getEventsHome(USER_NAME)
+
+    # paranoia
+    if not dst.startswith(HCRON_EVENTS_SNAPSHOT_HOME):
+        raise Exception("Bad destination")
+
+    shutil.rmtree(dst)
+    copytree(src, dst, USER_ID)
 
 def printUsage(progName):
     print """\
@@ -58,6 +85,12 @@ if __name__ == "__main__":
     #
     # setup
     #
+
+    try:
+        makeEventsSnapshot()
+    except:
+        print "Error: Could not copy events."
+        sys.exit(-1)
 
     try:
         signalReload()

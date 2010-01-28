@@ -34,7 +34,7 @@ import time
 # app imports
 from hcron.constants import *
 import hcron.globals as globals
-from hcron.library import WHEN_BITMASKS, WHEN_INDEXES, WHEN_MIN_MAX, listStToBitmask, dirWalk
+from hcron.library import WHEN_BITMASKS, WHEN_INDEXES, WHEN_MIN_MAX, listStToBitmask, dirWalk, getEventsHome
 from hcron.notify import sendEmailNotification
 from hcron.execute import remoteExecute
 from hcron.logger import *
@@ -233,26 +233,12 @@ class EventList:
         self.userName = userName
         self.load()
 
-    def getEventsHome(self):
-        config = globals.config.get()
-        eventsBasePath = (config.get("eventsBasePath") or "").strip()
-
-        if eventsBasePath == "":
-            path = os.path.expanduser("~%s/.hcron/%s/events" % (self.userName, HOST_NAME))
-        else:
-            path = os.path.join(eventsBasePath, self.userName, ".hcron/%s/events" % HOST_NAME)
-
-        if path.startswith("~"):
-            return None
-
-        return path
-
     def get(self, name):
         return self.events.get(name)
 
     def load(self):
         self.events = {}
-        eventsHome = self.getEventsHome()
+        eventsHome = getEventsHome(self.userName)
 
         if eventsHome == None:
             return

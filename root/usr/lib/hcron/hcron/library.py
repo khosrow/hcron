@@ -149,3 +149,35 @@ def dirWalk(top, topdown=True, onerror=None, ignoreMatchFn=None):
     if not topdown:
         yield top, dirs, nondirs
 
+def copytree(src, dst, srcUid):
+    """This is a modified version of shutil.copytree (python v2.6).
+    * copier is owner
+    * no stat information retained
+    * symlinks are converted to (copyof) files
+    * an error raises an exception
+    """
+    from os import listdir, makedirs
+    from shutil import copy2
+
+    makedirs(dst)
+
+    try:
+        for name in listdir(src):
+            src2 = os.path.join(src, name)
+            dst2 = os.path.join(dst, name)
+
+            if os.path.isdir(src2):
+                copytree(src2, dst2)
+            else:
+                seteuid(srcUid)
+                x = open(src2, "r").read(HCRON_MAX_EVENT_FILE_SIZE)
+                seteuid(0)
+                if len(x) < 5000:
+                    open(dst2, "w+").write(x)
+    except:
+        seteuid(0)
+
+def getEventsHome(userName):
+    path = os.path.join(HCRON_EVENTS_SNAPSHOT_HOME, userName)
+
+    return path
