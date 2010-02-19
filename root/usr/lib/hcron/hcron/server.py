@@ -87,6 +87,9 @@ class Server:
                 logMessage("info", "hcron.conf was modified")
                 # restart
                 globals.pidFile.remove()
+                if "--immediate" not in sys.argv:
+                    # do not miss current "now" time
+                    sys.argv.append("--immediate")
                 os.execv(sys.argv[0], sys.argv)
             if globals.allowedUsers.isModified():
                 logMessage("info", "hcron.allow was modified")

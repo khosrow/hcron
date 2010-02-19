@@ -89,13 +89,18 @@ def quitSignalHandler(num, frame):
 
 def printUsage(progName):
     print """\
-usage: %s
+usage: %s [--immediate]
 
 This program loads a collection of event definitions from one or
 more users and executes commands according their defined schedulues.
 When run as root, event definitions are read from registered users
 (listed in hcron.allow) for the local host; otherwise, this is done
-for the current user, only.""" % progName
+for the current user, only.
+
+Options:
+--immediate         Forces the scheduling of events to be done
+                    immediately (i.e., now, the current interval)
+                    rather than wait for the next interval""" % progName
 
 if __name__ == "__main__":
     progName = os.path.basename(sys.argv[0])
@@ -108,6 +113,9 @@ if __name__ == "__main__":
         if args[0] in [ "-h", "--help" ]:
             printUsage(progName)
             sys.exit(0)
+        elif "--immediate" in args:
+            # picked up by server.run()
+            pass
         else:
             printUsage(progName)
             sys.exit(-1)
