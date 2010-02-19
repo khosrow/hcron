@@ -96,8 +96,8 @@ def logChainEvents(userName, eventName0, eventName1, cycleDetected=False):
 def logDiscardEvents(userName, count):
     logAny("discard-events", userName, count)
 
-def logExecute(userName, asUser, host, eventName):
-    logAny("execute", userName, asUser, host, eventName)
+def logExecute(userName, asUser, host, eventName, retVal):
+    logAny("execute", userName, asUser, host, eventName, retVal)
 
 def logAlarm():
     logAny("alarm")

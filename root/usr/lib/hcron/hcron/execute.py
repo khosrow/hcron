@@ -83,8 +83,6 @@ def remoteExecute(eventName, localUserName, remoteUserName, remoteHostName, comm
     if remoteShellType != "ssh":
         raise RemoteExecuteException("Unknown remote shell type (%s)." % remoteShellType)
 
-    logExecute(localUserName, remoteUserName, remoteHostName, eventName)
-
     # spawn
     retVal = -1
     if command != "":
@@ -142,6 +140,8 @@ def remoteExecute(eventName, localUserName, remoteUserName, remoteHostName, comm
 
         except Exception, detail:
             logMessage("error", "Execute failed (%s)." % detail)
+
+    logExecute(localUserName, remoteUserName, remoteHostName, eventName, retVal)
 
     return retVal
 
