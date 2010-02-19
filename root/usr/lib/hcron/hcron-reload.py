@@ -85,12 +85,13 @@ if __name__ == "__main__":
     #
     # setup
     #
-
-    try:
-        makeEventsSnapshot()
-    except:
-        print "Error: Could not copy events."
-        sys.exit(-1)
+    if 0:
+        # plan to move this to something like scheduler
+        try:
+            makeEventsSnapshot()
+        except:
+            print "Error: Could not copy events."
+            sys.exit(-1)
 
     try:
         signalReload()
