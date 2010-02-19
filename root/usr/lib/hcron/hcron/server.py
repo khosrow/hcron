@@ -55,13 +55,20 @@ class Server:
         os.chdir("/")   # / is always available
         os.umask(0022)
 
-    def run(self):
+    def run(self, immediate=False):
+        """Run scheduling loop.
+        """
         minuteDelta = timedelta(minutes=1)
         now = datetime.now()
 
+        if immediate:
+            # special case: run with the current "now" time instead of
+            # waiting for the next interval
+            self.runNow(now)
+
         while True:
             #
-            # prep for next interation
+            # prep for next interval
             #
             next = now+minuteDelta
             next = next.replace(second=0)
@@ -89,15 +96,20 @@ class Server:
                 logMessage("info", "signalHome was modified")
                 globals.signalHome.load()
                 reloadEvents(globals.signalHome.getModifiedTime())
-    
-            #
-            # match events and act
-            #
-            t0 = time()
-            # hcron: 0=sun - 6=sat; isoweekday: 1=mon = 7=sun
-            hcronWeekday = now.isoweekday() % 7
-            datemasks = dateToBitmasks(now.year, now.month, now.day, now.hour, now.minute, hcronWeekday)
-            events = globals.eventListList.test(datemasks)
-            if events:
-                handleEvents(events)
-            logWork(len(events), (time()-t0))
+
+            self.runNow(now)
+
+    def runNow(self, now):
+        """Run using the "now" time value.
+        """
+        #
+        # match events and act
+        #
+        t0 = time()
+        # hcron: 0=sun - 6=sat; isoweekday: 1=mon = 7=sun
+        hcronWeekday = now.isoweekday() % 7
+        datemasks = dateToBitmasks(now.year, now.month, now.day, now.hour, now.minute, hcronWeekday)
+        events = globals.eventListList.test(datemasks)
+        if events:
+            handleEvents(events)
+        logWork(len(events), (time()-t0))
