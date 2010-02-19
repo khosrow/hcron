@@ -71,6 +71,7 @@ def remoteExecute(eventName, localUserName, remoteUserName, remoteHostName, comm
     remoteShellType = config.get("remoteShellType", REMOTE_SHELL_TYPE)
     remoteShellExec = config.get("remoteShellExec", REMOTE_SHELL_EXEC)
     timeout = timeout or globals.config.get().get("commandSpawnTimeout", COMMAND_SPAWN_TIMEOUT)
+    command = command.strip()
 
     # validate
     if remoteHostName in LOCAL_HOST_NAMES and not allowLocalhost:
@@ -86,7 +87,7 @@ def remoteExecute(eventName, localUserName, remoteUserName, remoteHostName, comm
 
     # spawn
     retVal = -1
-    if command.strip() != "":
+    if command != "":
         try:
             args = [ remoteShellExec, "-f", "-t", "-l", remoteUserName, remoteHostName, command ]
             childPid = os.fork()
