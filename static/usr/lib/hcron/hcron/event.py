@@ -370,6 +370,7 @@ class Event:
                     self.reason = "bad definition"
                     raise BadEventDefinitionException("Ignored event file (%s)." % self.path)
 
+                # early substitution
                 try:
                     value = self.hcronVariableSubstitution(value, "HCRON_EVENT_NAME", self.name, self.name.split("/"))
                     value = self.hcronVariableSubstitution(value, "HCRON_HOST_NAME", socket.getfqdn(), None)
@@ -447,6 +448,7 @@ class Event:
             asUserName = self.userName
         hostName = self.d.get("host")
 
+        # late substitution
         asUserName = self.hcronVariableSubstitution(asUserName, "HCRON_EVENT_CHAIN", None, eventChainNames)
         hostName = self.hcronVariableSubstitution(hostName, "HCRON_EVENT_CHAIN", None, eventChainNames)
         command = self.hcronVariableSubstitution(command, "HCRON_EVENT_CHAIN", None, eventChainNames)
