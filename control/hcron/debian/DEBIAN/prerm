@@ -1,0 +1,11 @@
+#!/bin/sh
+
+set -e
+
+if [ -x /etc/init.d/hcron ]; then
+	if [ -x /usr/sbin/invoke-rc.d ]; then
+		invoke-rc.d hcron stop
+	else
+		/etc/init.d/hcron stop
+	fi
+fi
