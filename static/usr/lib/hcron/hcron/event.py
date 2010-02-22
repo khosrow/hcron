@@ -447,11 +447,13 @@ class Event:
         if asUserName == "":
             asUserName = self.userName
         hostName = self.d.get("host")
+        notify_message = self.d.get("notify_message", "")
 
         # late substitution
         asUserName = self.hcronVariableSubstitution(asUserName, "HCRON_EVENT_CHAIN", None, eventChainNames)
         hostName = self.hcronVariableSubstitution(hostName, "HCRON_EVENT_CHAIN", None, eventChainNames)
         command = self.hcronVariableSubstitution(command, "HCRON_EVENT_CHAIN", None, eventChainNames)
+        notify_message = self.hcronVariableSubstitution(notify_message, "HCRON_EVENT_CHAIN", ":".join(eventChainNames), eventChainNames)
 
         # execute
         retVal = remoteExecute(self.name, self.userName, asUserName, hostName, command)
@@ -461,11 +463,8 @@ class Event:
             # notify
             toAddr = self.d.get("notify_email")
             if toAddr:
-                content = self.d.get("notify_message", "")
-                content = self.hcronVariableSubstitution(content, "HCRON_EVENT_CHAIN", ":".join(eventChainNames), eventChainNames)
-
                 subject = """hcron: "%s" executed at %s@%s""" % (self.name, asUserName, hostName)
-                sendEmailNotification(self.name, self.userName, toAddr, subject, content)
+                sendEmailNotification(self.name, self.userName, toAddr, subject, notify_message)
     
             nextEventName = self.d.get("next_event")
     
