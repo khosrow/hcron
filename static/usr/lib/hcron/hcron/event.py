@@ -442,35 +442,41 @@ class Event:
     def activate(self, eventChainNames=None):
         """Activate event and return next event in chain.
         """
-        asUserName = self.d.get("as_user")
-        command = self.d.get("command")
-        if asUserName == "":
-            asUserName = self.userName
-        hostName = self.d.get("host")
-        notify_message = self.d.get("notify_message", "")
+        # get event file def
+        event_as_user = self.d.get("as_user")
+        event_command = self.d.get("command")
+        if event_as_user == "":
+            event_as_user = self.userName
+        event_hostName = self.d.get("host")
+        event_notify_email = self.d.get("notify_email")
+        event_notify_message = self.d.get("notify_message", "")
+        event_next_event = self.d.get("next_event", "")
+        event_failover_event = self.d.get("event_failover_event", "")
 
         # late substitution
-        asUserName = self.hcronVariableSubstitution(asUserName, "HCRON_EVENT_CHAIN", None, eventChainNames)
-        hostName = self.hcronVariableSubstitution(hostName, "HCRON_EVENT_CHAIN", None, eventChainNames)
-        command = self.hcronVariableSubstitution(command, "HCRON_EVENT_CHAIN", None, eventChainNames)
-        notify_message = self.hcronVariableSubstitution(notify_message, "HCRON_EVENT_CHAIN", ":".join(eventChainNames), eventChainNames)
+        event_as_user = self.hcronVariableSubstitution(event_as_user, "HCRON_EVENT_CHAIN", None, eventChainNames)
+        event_host = self.hcronVariableSubstitution(event_host, "HCRON_EVENT_CHAIN", None, eventChainNames)
+        event_command = self.hcronVariableSubstitution(event_command, "HCRON_EVENT_CHAIN", None, eventChainNames)
+        event_notify_email = self.hcronVariableSubstitution(event_notify_email, "HCRON_EVENT_CHAIN", ":".join(eventChainNames), eventChainNames)
+        event_notify_message = self.hcronVariableSubstitution(event_notify_message, "HCRON_EVENT_CHAIN", ":".join(eventChainNames), eventChainNames)
+        event_next_event = self.hcronVariableSubstitution(event_next_event, "HCRON_EVENT_CHAIN", ":".join(eventChainNames), eventChainNames)
+        event_failover_event = self.hcronVariableSubstitution(event_failover_event, "HCRON_EVENT_CHAIN", ":".join(eventChainNames), eventChainNames)
 
         # execute
-        retVal = remoteExecute(self.name, self.userName, asUserName, hostName, command)
+        retVal = remoteExecute(self.name, self.userName, event_as_user, event_host, event_command)
 
         if retVal == 0:
             # success
             # notify
-            toAddr = self.d.get("notify_email")
-            if toAddr:
+            if event_notify_email:
                 subject = """hcron: "%s" executed at %s@%s""" % (self.name, asUserName, hostName)
-                sendEmailNotification(self.name, self.userName, toAddr, subject, notify_message)
+                sendEmailNotification(self.name, self.userName, event_notify_email, subject, event_notify_message)
     
-            nextEventName = self.d.get("next_event")
+            nextEventName = event_next_event
     
         else:
             # child, with problem
-            nextEventName = self.d.get("failover_event")
+            nextEventName = event_failover_event
 
         # handle None, "", and valid string
         nextEventName = nextEventName and self.resolveEventName(nextEventName.strip()) or None
