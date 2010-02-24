@@ -615,34 +615,6 @@ class Event:
 
         return name
 
-    def old_hcronVariableSubstitution(self, value, varName, varValue, varValues):
-        """Perform variable substitution.
-        """
-        wVarName = "$%s" % varName
-        if wVarName not in value:
-            return value
-
-        if varValues:
-            # resolve varName[#]
-            wVarName = "$%s[#]" % varName
-            value = value.replace(wVarName, str(len(varValues)))
-
-            # resolve varName[index]
-            for i in xrange(-len(varValues), len(varValues)):
-                wVarName = "$%s[%d]" % (varName, i)
-                value = value.replace(wVarName, varValues[i])
-
-            wVarName = "$%s[" % varName
-            if wVarName in value:
-                raise Exception("Variable index out of range.")
-
-        if varValue:
-            # resolve varName
-            wVarName = "$%s" % varName
-            value = value.replace(wVarName, varValue)
-
-        return value
-
 import re
 
 NAME_INDEX_RE = "(?P<op>[#$])(?P<name>HCRON_\w*)(\[(?P<sep_index>.*)\])?"
@@ -675,78 +647,6 @@ def hcronVariableSubstitution(value, varInfo, depth=1):
     l.append(value[lastPos:])
 
     return "".join(l)
-
-def hcronVariableSubstitution2(value, varInfo, depth=1):
-    """Recursively resolve all variables in value with settings in
-    varInfo. The mechanism is:
-    1) match
-    2) resolve
-    3) proceed to next match level (name_index, sep_index, ...)
-    """
-    try:
-        # default
-        sep = ":"
-
-        nid = NAME_INDEX_CRE.match(value).groupdict()
-        op = nid.get("op")
-        name = nid.get("name")
-        nameValue = varInfo.get(name)
-        sepIndex = nid.get("sep_index", "")
-        sepIndex = hcronVariableSubstitution2(sepIndex, varInfo, depth+1)
-
-        if sepIndex == None:
-            # no index
-            if nameValue != None:
-                value = nameValue
-        else:
-            sid = SEP_INDEX_CRE.match(sepIndex).groupdict()
-            sep = sid.get("sep")
-            if sep == None:
-                # special case!
-                sep = name == "HCRON_EVENT_NAME" and "/" or ":"
-            else:
-                sep = hcronVariableSubstitution2(sep, varInfo, depth+1)
-            index = sid["index"]
-            index = hcronVariableSubstitution2(index, varInfo, depth+1)
-    
-            # fix RE to avoid having to check for None for single index value
-            isl = [ el for el in INDEX_SELECT_CRE.match(index).groups() if el != None ]
-            for i in xrange(len(isl)):
-                isl[i] = hcronVariableSubstitution2(isl[i], varInfo, depth+1)
-                irl = [ el != "" and el or None for el in INDEX_RANGE_CRE.match(isl[i]).groups() ]
-                start, endColon, end, stepColon, step = irl[0:5]
-                start = hcronVariableSubstitution2(start, varInfo, depth+1)
-                end = hcronVariableSubstitution2(end, varInfo, depth+1)
-                step = hcronVariableSubstitution2(step, varInfo, depth+1)
-    
-                if start != "":
-                    start = int(start)
-                if end == None:
-                    if endColon == None:
-                        end = start+1
-                    else:
-                        end = None
-                else:
-                    end = int(end)
-                if step == None:
-                    if stepColon == None:
-                        step = 1
-                    else:
-                        step = None
-                else:
-                    step = int(step)
-                isl[i] = sep.join(nameValue.split(sep)[start:end:step])
-    
-            value = sep.join(isl)
-
-        if op == "#" and nameValue != None:
-            value = str(value.count(sep)+1)
-    except:
-        import traceback
-        #print traceback.print_exc()
-        pass
-
-    return value
 
 def load_assignments(st):
     """Load lines with the format name=value into a list of
