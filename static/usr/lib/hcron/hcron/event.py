@@ -28,6 +28,7 @@
 import os
 import os.path
 import pwd
+import re
 import stat
 import time
 
@@ -358,6 +359,11 @@ class Event:
                 self.reason = "cannot load file"
                 raise CannotLoadFileException("Ignored event file (%s)." % self.path)
 
+            varInfo = {
+                "HCRON_EVENT_NAME": self.name,
+                "HCRON_HOST_NAME": socket.getfqdn(),
+            }
+
             for line in lines:
                 line = line.strip()
     
@@ -372,8 +378,7 @@ class Event:
 
                 # early substitution
                 try:
-                    value = self.hcronVariableSubstitution(value, "HCRON_EVENT_NAME", self.name, self.name.split("/"))
-                    value = self.hcronVariableSubstitution(value, "HCRON_HOST_NAME", socket.getfqdn(), None)
+                    value = hcronVariableSubstitution(value, varInfo)
                 except Exception, detail:
                     self.reason = "bad variable substitution"
                     BadVariableSubstitutionException("Ignored event file (%s)." % self.path)
@@ -447,20 +452,29 @@ class Event:
         event_command = self.d.get("command")
         if event_as_user == "":
             event_as_user = self.userName
-        event_hostName = self.d.get("host")
+        event_host = self.d.get("host")
         event_notify_email = self.d.get("notify_email")
         event_notify_message = self.d.get("notify_message", "")
         event_next_event = self.d.get("next_event", "")
         event_failover_event = self.d.get("event_failover_event", "")
 
         # late substitution
-        event_as_user = self.hcronVariableSubstitution(event_as_user, "HCRON_EVENT_CHAIN", None, eventChainNames)
-        event_host = self.hcronVariableSubstitution(event_host, "HCRON_EVENT_CHAIN", None, eventChainNames)
-        event_command = self.hcronVariableSubstitution(event_command, "HCRON_EVENT_CHAIN", None, eventChainNames)
-        event_notify_email = self.hcronVariableSubstitution(event_notify_email, "HCRON_EVENT_CHAIN", ":".join(eventChainNames), eventChainNames)
-        event_notify_message = self.hcronVariableSubstitution(event_notify_message, "HCRON_EVENT_CHAIN", ":".join(eventChainNames), eventChainNames)
-        event_next_event = self.hcronVariableSubstitution(event_next_event, "HCRON_EVENT_CHAIN", ":".join(eventChainNames), eventChainNames)
-        event_failover_event = self.hcronVariableSubstitution(event_failover_event, "HCRON_EVENT_CHAIN", ":".join(eventChainNames), eventChainNames)
+        # hcron-specific
+        varInfo = {
+            "HCRON_EVENT_CHAIN": ":".join(eventChainNames),
+        } 
+        # user-provided
+        hcron_user_names = [ name for name in self.d.keys() if name.startswith("HCRON_USER_") ]
+        for name in sorted(hcron_user_names):
+            varInfo[name] = self.d.get(name, "")
+
+        event_as_user = hcronVariableSubstitution(event_as_user, varInfo)
+        event_host = hcronVariableSubstitution(event_host,varInfo)
+        event_command = hcronVariableSubstitution(event_command, varInfo)
+        event_notify_email = hcronVariableSubstitution(event_notify_email, varInfo)
+        event_notify_message = hcronVariableSubstitution(event_notify_message, varInfo)
+        event_next_event = hcronVariableSubstitution(event_next_event, varInfo)
+        event_failover_event = hcronVariableSubstitution(event_failover_event, varInfo)
 
         # execute
         retVal = remoteExecute(self.name, self.userName, event_as_user, event_host, event_command)
@@ -469,7 +483,7 @@ class Event:
             # success
             # notify
             if event_notify_email:
-                subject = """hcron: "%s" executed at %s@%s""" % (self.name, asUserName, hostName)
+                subject = """hcron: "%s" executed at %s@%s""" % (self.name, event_as_user, event_host)
                 sendEmailNotification(self.name, self.userName, event_notify_email, subject, event_notify_message)
     
             nextEventName = event_next_event
@@ -496,7 +510,7 @@ class Event:
 
         return name
 
-    def hcronVariableSubstitution(self, value, varName, varValue, varValues):
+    def old_hcronVariableSubstitution(self, value, varName, varValue, varValues):
         """Perform variable substitution.
         """
         wVarName = "$%s" % varName
@@ -504,6 +518,10 @@ class Event:
             return value
 
         if varValues:
+            # resolve varName[#]
+            wVarName = "$%s[#]" % varName
+            value = value.replace(wVarName, str(len(varValues)))
+
             # resolve varName[index]
             for i in xrange(-len(varValues), len(varValues)):
                 wVarName = "$%s[%d]" % (varName, i)
@@ -519,3 +537,110 @@ class Event:
             value = value.replace(wVarName, varValue)
 
         return value
+
+import re
+
+NAME_INDEX_RE = "(?P<op>[#$])(?P<name>HCRON_\w*)(\[(?P<sep_index>.*)\])?"
+SEP_INDEX_RE = "(?:(?P<sep>.*)!)?(?P<index>.*)"
+INDEX_SELECT_RE = "(.*)(?:,(.*))?"
+INDEX_RANGE_RE = "(\d*)(:(\d*))?(:(\d*))?"
+NAME_INDEX_CRE = re.compile(NAME_INDEX_RE)
+SEP_INDEX_CRE = re.compile(SEP_INDEX_RE)
+INDEX_SELECT_CRE = re.compile(INDEX_SELECT_RE)
+INDEX_RANGE_CRE = re.compile(INDEX_RANGE_RE)
+
+def hcronVariableSubstitution(value, varInfo, depth=1):
+    """Perform variable substitution.
+
+    Search for substitutable segments, substitute, repeat. Once a
+    substitution is done, that segment is not treated again.
+    """
+    l = []
+    lastPos = 0
+    while True:
+        s = NAME_INDEX_CRE.search(value, lastPos)
+        if s == None:
+            break
+
+        startPos, endPos = s.span()
+        l.append(value[lastPos:startPos])
+        l.append(hcronVariableSubstitution2(value[startPos:endPos], varInfo))
+        lastPos = endPos
+
+    l.append(value[lastPos:])
+
+    return "".join(l)
+
+def hcronVariableSubstitution2(value, varInfo, depth=1):
+    """Recursively resolve all variables in value with settings in
+    varInfo. The mechanism is:
+    1) match
+    2) resolve
+    3) proceed to next match level (name_index, sep_index, ...)
+    """
+    try:
+        # default
+        sep = ":"
+
+        nid = NAME_INDEX_CRE.match(value).groupdict()
+        op = nid.get("op")
+        name = nid.get("name")
+        nameValue = varInfo.get(name)
+        sepIndex = nid.get("sep_index", "")
+        sepIndex = hcronVariableSubstitution2(sepIndex, varInfo, depth+1)
+
+        if sepIndex == None:
+            # no index
+            if nameValue != None:
+                value = nameValue
+        else:
+            sid = SEP_INDEX_CRE.match(sepIndex).groupdict()
+            sep = sid.get("sep")
+            if sep == None:
+                # special case!
+                sep = name == "HCRON_EVENT_NAME" and "/" or ":"
+            else:
+                sep = hcronVariableSubstitution2(sep, varInfo, depth+1)
+            index = sid["index"]
+            index = hcronVariableSubstitution2(index, varInfo, depth+1)
+    
+            # fix RE to avoid having to check for None for single index value
+            isl = [ el for el in INDEX_SELECT_CRE.match(index).groups() if el != None ]
+            for i in xrange(len(isl)):
+                isl[i] = hcronVariableSubstitution2(isl[i], varInfo, depth+1)
+                irl = [ el != "" and el or None for el in INDEX_RANGE_CRE.match(isl[i]).groups() ]
+                start, endColon, end, stepColon, step = irl[0:5]
+                start = hcronVariableSubstitution2(start, varInfo, depth+1)
+                end = hcronVariableSubstitution2(end, varInfo, depth+1)
+                step = hcronVariableSubstitution2(step, varInfo, depth+1)
+    
+                if start != "":
+                    start = int(start)
+                if end == None:
+                    if endColon == None:
+                        end = start+1
+                    else:
+                        end = None
+                else:
+                    end = int(end)
+                if step == None:
+                    if stepColon == None:
+                        step = 1
+                    else:
+                        step = None
+                else:
+                    step = int(step)
+                isl[i] = sep.join(nameValue.split(sep)[start:end:step])
+    
+            value = sep.join(isl)
+
+        if op == "#" and nameValue != None:
+            value = str(value.count(sep)+1)
+    except:
+        import traceback
+        #print traceback.print_exc()
+        pass
+
+    return value
+
+
