@@ -343,6 +343,74 @@ class Event:
         return self.path
 
     def load(self):
+        varInfo = {
+            "when_year": "*",
+            "template_name": None,
+            "HCRON_EVENT_NAME": self.name,
+            "HCRON_HOST_NAME": socket.getfqdn(),
+        }
+
+        masks = {
+            WHEN_INDEXES["when_year"]: listStToBitmask("*", WHEN_MIN_MAX["when_year"], WHEN_BITMASKS["when_year"]),
+        }
+
+        try:
+            try:
+                st = open(self.path, "r").read()
+            except Exception, detail:
+                self.reason = "cannot load file"
+                raise CannotLoadFileException("Ignored event file (%s)." % self.path)
+
+            try:
+                assignments = load_assignments(st)
+            except Exception, detail:
+                self.reason = "bad definition"
+                raise BadEventDefinitionException("Ignored event file (%s)." % self.path)
+
+            try:
+                # early substitution
+                eval_assignments(assignments, varInfo)
+            except Exception, detail:
+                self.reason = "bad variable substitution"
+                BadVariableSubstitutionException("Ignored event file (%s)." % self.path)
+
+            # template check
+            if varInfo["template_name"] == self.name.split("/")[-1]:
+                self.reason = "template"
+                raise TemplateEventDefinitionException("Ignored event file (%s). Template name (%s)." % (self.path, varInfo["template_name"]))
+    
+            # bad definition check
+            try:
+                for name, value in varInfo.items():
+                    if name.startswith("when_"):
+                        masks[WHEN_INDEXES[name]] = listStToBitmask(value, WHEN_MIN_MAX[name], WHEN_BITMASKS[name])
+    
+            except Exception, detail:
+                self.reason = "bad when_* setting"
+                raise BadEventDefinitionException("Ignored event file (%s)." % self.path)
+
+            # full specification check
+            for name in HCRON_EVENT_DEFINITION_NAMES:
+                if name not in varInfo:
+                    self.reason = "not fully specified"
+                    raise BadEventDefinitionException("Ignored event file (%s). Missing name (%s)." % \
+                        (self.path, name))
+        except:
+            if self.reason == None:
+                self.reason = "unknown problem"
+
+        self.when = "%s %s %s %s %s %s" % \
+            (varInfo.get("when_year"),
+                varInfo.get("when_month"),
+                varInfo.get("when_day"),
+                varInfo.get("when_hour"),
+                varInfo.get("when_minute"),
+                varInfo.get("when_dow"))
+
+        self.assignments = assignments
+        self.masks = masks
+
+    def load2(self):
         # default for implied "this year"
         d = {
             "when_year": "*",
@@ -418,14 +486,7 @@ class Event:
         self.masks = masks
 
     def __repr__(self):
-        when = "%s %s %s %s %s %s" % \
-            (self.d.get("when_year"),
-                self.d.get("when_month"),
-                self.d.get("when_day"),
-                self.d.get("when_hour"),
-                self.d.get("when_minute"),
-                self.d.get("when_dow"))
-        return """<Event name (%s) when (%s)>""" % (self.name, when)
+        return """<Event name (%s) when (%s)>""" % (self.name, self.when)
 
     def test(self, datemasks):
         if self.reason != None:
@@ -438,13 +499,57 @@ class Event:
                     return 0
             except Exception, detail:
                 # should not get here
-                logMessage("error", "detail (%s) self.reason (%s) user (%s) name (%s) d (%s)." % \
-                    (detail, self.reason, self.userName, self.name, str(self.d)))
+                logMessage("error", "detail (%s) self.reason (%s) user (%s) name (%s) when (%s)." % \
+                    (detail, self.reason, self.userName, self.name, self.when))
                 return 0
 
         return 1
 
     def activate(self, eventChainNames=None):
+        """Activate event and return next event in chain.
+        """
+        varInfo = {
+            "HCRON_EVENT_CHAIN": ":".join(eventChainNames),
+            "HCRON_EVENT_NAME": self.name,
+            "HCRON_HOST_NAME": socket.getfqdn(),
+        } 
+
+        # late substitution
+        eval_assignments(self.assignments, varInfo)
+
+        # get event file def
+        event_as_user = varInfo.get("as_user")
+        event_command = varInfo.get("command")
+        if event_as_user == "":
+            event_as_user = self.userName
+        event_host = varInfo.get("host")
+        event_notify_email = varInfo.get("notify_email")
+        event_notify_message = varInfo.get("notify_message", "")
+        event_next_event = varInfo.get("next_event", "")
+        event_failover_event = varInfo.get("event_failover_event", "")
+
+        # execute
+        retVal = remoteExecute(self.name, self.userName, event_as_user, event_host, event_command)
+
+        if retVal == 0:
+            # success
+            # notify
+            if event_notify_email:
+                subject = """hcron: "%s" executed at %s@%s""" % (self.name, event_as_user, event_host)
+                sendEmailNotification(self.name, self.userName, event_notify_email, subject, event_notify_message)
+    
+            nextEventName = event_next_event
+    
+        else:
+            # child, with problem
+            nextEventName = event_failover_event
+
+        # handle None, "", and valid string
+        nextEventName = nextEventName and self.resolveEventName(nextEventName.strip()) or None
+
+        return nextEventName
+
+    def activate2(self, eventChainNames=None):
         """Activate event and return next event in chain.
         """
         # get event file def
@@ -642,5 +747,27 @@ def hcronVariableSubstitution2(value, varInfo, depth=1):
         pass
 
     return value
+
+def load_assignments(st):
+    """Load lines with the format name=value into a list of
+    (name, value) tuples.
+    """
+    l = []
+
+    for line in st.split("\n"):
+        line = line.strip()
+        if line.startswith("#") or line == "":
+            continue
+        name, value  = line.split("=", 1)
+        l.append((name.strip(), value.strip()))
+
+    return l
+
+def eval_assignments(assignments, varInfo):
+    """Evaluate assignments using the settings in varInfo and storing the
+    results back to varInfo.
+    """
+    for name, value in assignments:
+        varInfo[name] = hcronVariableSubstitution(value, varInfo)
 
 
