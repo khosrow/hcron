@@ -25,6 +25,7 @@
 """
 
 # system imports
+from datetime import datetime
 import os
 import os.path
 import pwd
@@ -110,7 +111,9 @@ def handleEvents(events):
 
                 logChainEvents(event.userName, event.getName(), nextEventName, cycleDetected=(nextEventName in eventChainNames))
 
-                if nextEventName in eventChainNames:
+                # allow cycles up to a limit
+                #if nextEventName in eventChainNames:
+                if len(eventChainNames) > 3:
                     break
                 else:
                     eventList = globals.eventListList.get(event.userName)
@@ -342,13 +345,36 @@ class Event:
     def getPath(self):
         return self.path
 
-    def load(self):
+    def getVarInfo(self, eventChainNames=None):
+        dt_utc = datetime.utcnow()
+        dt_local = datetime.now()
+
         varInfo = {
             "when_year": "*",
             "template_name": None,
-            "HCRON_EVENT_NAME": self.name,
+            "HCRON_DATETIME": datetime.strftime(dt_local, "%Y:%m:%d:%H:%M:%S:%W:%w"),
+            "HCRON_DATETIME_UTC": datetime.strftime(dt_utc, "%Y:%m:%d:%H:%M:%S:%W:%w"),
             "HCRON_HOST_NAME": socket.getfqdn(),
+            "HCRON_EVENT_NAME": self.name,
         }
+        
+        if eventChainNames:
+            selfEventChainNames = []
+            lastEventChainName = eventChainNames[-1]
+            for eventChainName in reversed(eventChainNames):
+                if eventChainName != lastEventChainName:
+                    break
+                selfEventChainNames.append(eventChainName)
+            varInfo["HCRON_EVENT_CHAIN"] = ":".join(eventChainNames)
+            varInfo["HCRON_SELF_CHAIN"] = ":".join(selfEventChainNames)
+        else:
+            varInfo["HCRON_EVENT_CHAIN"] = ""
+            varInfo["HCRON_SELF_CHAIN"] = ""
+
+        return varInfo
+
+    def load(self):
+        varInfo = self.getVarInfo()
 
         masks = {
             WHEN_INDEXES["when_year"]: listStToBitmask("*", WHEN_MIN_MAX["when_year"], WHEN_BITMASKS["when_year"]),
@@ -433,14 +459,11 @@ class Event:
     def activate(self, eventChainNames=None):
         """Activate event and return next event in chain.
         """
-        varInfo = {
-            "HCRON_EVENT_CHAIN": ":".join(eventChainNames),
-            "HCRON_EVENT_NAME": self.name,
-            "HCRON_HOST_NAME": socket.getfqdn(),
-        } 
+        varInfo = self.getVarInfo(eventChainNames)
 
         # late substitution
         eval_assignments(self.assignments, varInfo)
+        #open("/tmp/hc", "a").write("self.name (%s) varInfo (%s)\n" % (self.name, str(varInfo)))
 
         # get event file def
         event_as_user = varInfo.get("as_user")
@@ -451,10 +474,13 @@ class Event:
         event_notify_email = varInfo.get("notify_email")
         event_notify_message = varInfo.get("notify_message", "")
         event_next_event = varInfo.get("next_event", "")
-        event_failover_event = varInfo.get("event_failover_event", "")
+        event_failover_event = varInfo.get("failover_event", "")
 
-        # execute
-        retVal = remoteExecute(self.name, self.userName, event_as_user, event_host, event_command)
+        # execute (host required)
+        if event_host == "":
+            retVal = 0
+        else:
+            retVal = remoteExecute(self.name, self.userName, event_as_user, event_host, event_command)
 
         if retVal == 0:
             # success
@@ -489,14 +515,14 @@ class Event:
 
 import re
 
-NAME_INDEX_RE = "(?P<op>[#$])(?P<name>HCRON_\w*)(\[(?P<sep_index>.*)\])?"
-SEP_INDEX_RE = "(?:(?P<sep>.*)!)?(?P<index>.*)"
-INDEX_SELECT_RE = "(.*)(?:,(.*))?"
-INDEX_RANGE_RE = "(\d*)(:(\d*))?(:(\d*))?"
-NAME_INDEX_CRE = re.compile(NAME_INDEX_RE)
-SEP_INDEX_CRE = re.compile(SEP_INDEX_RE)
-INDEX_SELECT_CRE = re.compile(INDEX_SELECT_RE)
-INDEX_RANGE_CRE = re.compile(INDEX_RANGE_RE)
+SUBST_NAME_SELECT_RE = "(?P<op>[#$])(?P<name>HCRON_\w*)(\[(?P<select>.*)\])?"
+SUBST_SEP_LIST_RE = "(?:(?P<sep>.*)!)?(?P<list>.*)"
+SUBST_LIST_RE = "(.*)(?:,(.*))?"
+SUBST_SLICE_RE = "(\d*)(:(\d*))?(:(\d*))?"
+SUBST_NAME_SELECT_CRE = re.compile(SUBST_NAME_SELECT_RE)
+SUBST_SEP_LIST_CRE = re.compile(SUBST_SEP_LIST_RE)
+SUBST_LIST_CRE = re.compile(SUBST_LIST_RE)
+SUBST_SLICE_CRE = re.compile(SUBST_SLICE_RE)
 
 def hcronVariableSubstitution(value, varInfo, depth=1):
     """Perform variable substitution.
@@ -507,7 +533,7 @@ def hcronVariableSubstitution(value, varInfo, depth=1):
     l = []
     lastPos = 0
     while True:
-        s = NAME_INDEX_CRE.search(value, lastPos)
+        s = SUBST_NAME_SELECT_CRE.search(value, lastPos)
         if s == None:
             break
 
@@ -519,6 +545,79 @@ def hcronVariableSubstitution(value, varInfo, depth=1):
     l.append(value[lastPos:])
 
     return "".join(l)
+
+def hcronVariableSubstitution2(value, varInfo, depth=1):
+    """Recursively resolve all variables in value with settings in
+    varInfo. The mechanism is:
+    1) match
+    2) resolve
+    3) proceed to next match level (name, select, ...)
+    """
+    try:
+        # default
+        substSep = ":"
+
+        nid = SUBST_NAME_SELECT_CRE.match(value).groupdict()
+        op = nid.get("op")
+        substName = nid.get("name")
+        nameValue = varInfo.get(substName)
+        substSelect = nid.get("select", "")
+        substSelect = hcronVariableSubstitution2(substSelect, varInfo, depth+1)
+
+        if substSelect == None:
+            # no select
+            if nameValue != None:
+                value = nameValue
+        else:
+            sid = SUBST_SEP_LIST_CRE.match(substSelect).groupdict()
+            substSep = sid.get("sep")
+            if substSep == None:
+                # special case!
+                substSep = substName == "HCRON_EVENT_NAME" and "/" or ":"
+            else:
+                substSep = hcronVariableSubstitution2(substSep, varInfo, depth+1)
+            substList = sid["list"]
+            substList = hcronVariableSubstitution2(substList, varInfo, depth+1)
+
+            # fix RE to avoid having to check for None for single list value
+            isl = [ el for el in SUBST_LIST_CRE.match(substList).groups() if el != None ]
+            for i in xrange(len(isl)):
+                isl[i] = hcronVariableSubstitution2(isl[i], varInfo, depth+1)
+                irl = [ el != "" and el or None for el in SUBST_SLICE_CRE.match(isl[i]).groups() ]
+                start, endColon, end, stepColon, step = irl[0:5]
+                start = hcronVariableSubstitution2(start, varInfo, depth+1)
+                end = hcronVariableSubstitution2(end, varInfo, depth+1)
+                step = hcronVariableSubstitution2(step, varInfo, depth+1)
+
+                if start != "":
+                    start = int(start)
+                if end == None:
+                    if endColon == None:
+                        end = start+1
+                    else:
+                        end = None
+                else:
+                    end = int(end)
+                if step == None:
+                    if stepColon == None:
+                        step = 1
+                    else:
+                        step = None
+                else:
+                    step = int(step)
+                isl[i] = substSep.join(nameValue.split(substSep)[start:end:step])
+
+            value = substSep.join(isl)
+
+        if op == "#" and nameValue != None:
+            #open("/tmp/hc", "a").write("*** name (%s) nameValue (%s) sep (%s) value (%s) count (%s)\n" % (substName, nameValue, substSep, value, value.count(substSep)+1))
+            value = str(value.count(substSep)+1)
+    except:
+        import traceback
+        #print traceback.print_exc()
+        pass
+
+    return value
 
 def load_assignments(st):
     """Load lines with the format name=value into a list of
