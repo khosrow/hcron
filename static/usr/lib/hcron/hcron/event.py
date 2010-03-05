@@ -398,7 +398,7 @@ class Event:
                 eval_assignments(assignments, varInfo)
             except Exception, detail:
                 self.reason = "bad variable substitution"
-                BadVariableSubstitutionException("Ignored event file (%s)." % self.path)
+                raise BadVariableSubstitutionException("Ignored event file (%s)." % self.path)
 
             # template check
             if varInfo["template_name"] == self.name.split("/")[-1]:
