@@ -418,8 +418,8 @@ class Event:
             # full specification check
             for name in HCRON_EVENT_DEFINITION_NAMES:
                 if name not in varInfo:
-                    self.reason = "not fully specified"
-                    raise BadEventDefinitionException("Ignored event file (%s). Missing name (%s)." % \
+                    self.reason = "not fully specified, missing field (%s)" % name
+                    raise BadEventDefinitionException("Ignored event file (%s). Missing field (%s)." % \
                         (self.path, name))
         except:
             if self.reason == None:
