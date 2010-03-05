@@ -26,6 +26,7 @@
 
 # system imports
 from datetime import datetime
+import fnmatch
 import os
 import os.path
 import pwd
@@ -515,7 +516,46 @@ class Event:
 
 import re
 
-SUBST_NAME_SELECT_RE = "(?P<op>[#$])(?P<name>HCRON_\w*)(\[(?P<select>.*)\])?"
+SUBST_NAME_RE = "(?P<op>[#$])(?P<name>HCRON_\w*)"
+SUBST_NAME_CRE = re.compile(SUBST_NAME_RE)
+def searchNameSelect(st, lastPos):
+    """Find startPos and endPos for:
+    1. [#$]<name>[<body>]
+    2. [#$]<name>{<body>}
+    3. [#$]<name>
+    otherwise:
+    3. None, None
+    """
+    startPos, endPos = None, None
+    s = SUBST_NAME_CRE.search(st, lastPos)
+    if s:
+        startPos, endPos = s.span()
+        if endPos < len(st):
+            openB = st[endPos]
+            if openB in [ "[", "{" ]:
+                if openB == "[":
+                    closeB = "]"
+                elif openB == "{":
+                    closeB = "}"
+
+                depth = 0
+                for ch in st[endPos:]:
+                    if ch == openB:
+                        depth += 1
+                    elif ch == closeB:
+                        depth -= 1
+                        if depth == 0:
+                            endPos += 1
+                            break
+                    endPos += 1
+                else:
+                    # no closing bracket
+                    startPos = None
+                    endPos = None
+
+    return startPos, endPos
+        
+SUBST_NAME_SELECT_RE = "(?P<op>[#$])(?P<name>HCRON_\w*)(((?P<square_bracket>\[)(?P<square_select>.*)\])|((?P<curly_bracket>\{)(?P<curly_select>.*)\}))?"
 SUBST_SEP_LIST_RE = "(?:(?P<sep>.*)!)?(?P<list>.*)"
 SUBST_LIST_RE = "(.*)(?:,(.*))?"
 SUBST_SLICE_RE = "(\d*)(:(\d*))?(:(\d*))?"
@@ -533,16 +573,24 @@ def hcronVariableSubstitution(value, varInfo, depth=1):
     l = []
     lastPos = 0
     while True:
-        s = SUBST_NAME_SELECT_CRE.search(value, lastPos)
-        if s == None:
+        if 0:
+            s = SUBST_NAME_SELECT_CRE.search(value, lastPos)
+            if s == None:
+                break
+            startPos, endPos = s.span()
+
+        startPos, endPos = searchNameSelect(value, lastPos)
+
+        if startPos == None:
             break
 
-        startPos, endPos = s.span()
         l.append(value[lastPos:startPos])
         l.append(hcronVariableSubstitution2(value[startPos:endPos], varInfo))
         lastPos = endPos
 
     l.append(value[lastPos:])
+
+    #open("/tmp/hc", "a").write("value (%s) -> (%s)\n" % (value, "".join(l)))
 
     return "".join(l)
 
@@ -558,11 +606,21 @@ def hcronVariableSubstitution2(value, varInfo, depth=1):
         substSep = ":"
 
         nid = SUBST_NAME_SELECT_CRE.match(value).groupdict()
+        #open("/tmp/hc", "a").write("nid (%s)\n" % str(nid))
+
         op = nid.get("op")
         substName = nid.get("name")
         nameValue = varInfo.get(substName)
-        substSelect = nid.get("select", "")
+        substBracket = nid.get("square_bracket") and "[" or (nid.get("curly_bracket") and "{") or None
+        #open("/tmp/hc", "a").write(" **** substBracket *** (%s)\n" % substBracket)
+        if substBracket == "[":
+            substSelect = nid.get("square_select", "")
+        elif substBracket == "{":
+            substSelect = nid.get("curly_select", "")
+        else:
+            substSelect = None
         substSelect = hcronVariableSubstitution2(substSelect, varInfo, depth+1)
+
 
         if substSelect == None:
             # no select
@@ -576,44 +634,61 @@ def hcronVariableSubstitution2(value, varInfo, depth=1):
                 substSep = substName == "HCRON_EVENT_NAME" and "/" or ":"
             else:
                 substSep = hcronVariableSubstitution2(substSep, varInfo, depth+1)
+
+            nameValues = nameValue.split(substSep)
+
             substList = sid["list"]
             substList = hcronVariableSubstitution2(substList, varInfo, depth+1)
 
             # fix RE to avoid having to check for None for single list value
-            isl = [ el for el in SUBST_LIST_CRE.match(substList).groups() if el != None ]
-            for i in xrange(len(isl)):
-                isl[i] = hcronVariableSubstitution2(isl[i], varInfo, depth+1)
-                irl = [ el != "" and el or None for el in SUBST_SLICE_CRE.match(isl[i]).groups() ]
-                start, endColon, end, stepColon, step = irl[0:5]
-                start = hcronVariableSubstitution2(start, varInfo, depth+1)
-                end = hcronVariableSubstitution2(end, varInfo, depth+1)
-                step = hcronVariableSubstitution2(step, varInfo, depth+1)
+            ll = substList.split(",")
+            #open("/tmp/hc", "a").write("-- ll (%s)\n" % str(ll))
 
-                if start != "":
-                    start = int(start)
-                if end == None:
-                    if endColon == None:
-                        end = start+1
-                    else:
-                        end = None
-                else:
-                    end = int(end)
-                if step == None:
-                    if stepColon == None:
-                        step = 1
-                    else:
-                        step = None
-                else:
-                    step = int(step)
-                isl[i] = substSep.join(nameValue.split(substSep)[start:end:step])
+            if substBracket == "[":
+                # indexing
+                for i in xrange(len(ll)):
+                    ll[i] = hcronVariableSubstitution2(ll[i], varInfo, depth+1)
+                    #open("/tmp/hc", "a").write("---- ll (%s) i (%s) ll[i] (%s)\n" % (str(ll), i, ll[i]))
+                    irl = [ el != "" and el or None for el in SUBST_SLICE_CRE.match(ll[i]).groups() ]
+                    #open("/tmp/hc", "a").write("------- irl (%s)\n" % str(irl))
+                    start, endColon, end, stepColon, step = irl[0:5]
+                    start = hcronVariableSubstitution2(start, varInfo, depth+1)
+                    end = hcronVariableSubstitution2(end, varInfo, depth+1)
+                    step = hcronVariableSubstitution2(step, varInfo, depth+1)
 
-            value = substSep.join(isl)
+                    if start != "":
+                        start = int(start)
+                    if end == None:
+                        if endColon == None:
+                            end = start+1
+                        else:
+                            end = None
+                    else:
+                        end = int(end)
+                    if step == None:
+                        if stepColon == None:
+                            step = 1
+                        else:
+                            step = None
+                    else:
+                        step = int(step)
+                    ll[i] = substSep.join(nameValues[start:end:step])
+                    #open("/tmp/hc", "a").write("------------ ll[i] (%s)\n" % str(ll[i]))
+            elif substBracket == "{":
+                # matching: substitute, match, flatten
+                ll = [ hcronVariableSubstitution2(x, varInfo, depth+1) for x in ll ]
+                #open("/tmp/hc", "a").write("---- ll (%s) nameValues (%s)\n" % (str(ll), nameValues))
+                ll = [ el for x in ll for el in fnmatch.filter(nameValues, x) ]
+                #open("/tmp/hc", "a").write("------ ll (%s)\n" % str(ll))
+
+            value = substSep.join(ll)
 
         if op == "#" and nameValue != None:
             #open("/tmp/hc", "a").write("*** name (%s) nameValue (%s) sep (%s) value (%s) count (%s)\n" % (substName, nameValue, substSep, value, value.count(substSep)+1))
             value = str(value.count(substSep)+1)
     except:
         import traceback
+        #open("/tmp/hc", "a").write("tackback ++++++++ (%s)\n" % traceback.format_exc())
         #print traceback.print_exc()
         pass
 
