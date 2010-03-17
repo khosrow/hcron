@@ -558,7 +558,7 @@ def searchNameSelect(st, lastPos):
 SUBST_NAME_SELECT_RE = "(?P<op>[#$])(?P<name>HCRON_\w*)(((?P<square_bracket>\[)(?P<square_select>.*)\])|((?P<curly_bracket>\{)(?P<curly_select>.*)\}))?"
 SUBST_SEP_LIST_RE = "(?:(?P<sep>.*)!)?(?P<list>.*)"
 SUBST_LIST_RE = "(.*)(?:,(.*))?"
-SUBST_SLICE_RE = "(\d*)(:(\d*))?(:(\d*))?"
+SUBST_SLICE_RE = "(-?\d*)(:(-?\d*))?(:(-?\d*))?"
 SUBST_NAME_SELECT_CRE = re.compile(SUBST_NAME_SELECT_RE)
 SUBST_SEP_LIST_CRE = re.compile(SUBST_SEP_LIST_RE)
 SUBST_LIST_CRE = re.compile(SUBST_LIST_RE)
