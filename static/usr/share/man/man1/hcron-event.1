@@ -1,4 +1,4 @@
-.TH HCRON-EVENT "1" "March 2010" "hcron 0.13" ""
+.TH HCRON-EVENT "1" "April 2010" "hcron 0.14" ""
 .SH NAME
 hcron-event \- Create and edit hcron event definition files
 .SH SYNOPSIS
@@ -37,9 +37,8 @@ stored under 1) each user's home directory, or 2) a special location as
 .nf
 \.hcron/
     <hostName>/
-        events/
+        includes/
             <dirs and files>
-    <hostName>/
         events/
             <dirs and files>
     ...
@@ -47,16 +46,23 @@ stored under 1) each user's home directory, or 2) a special location as
 .RE
 
 .PP
-The hcron-scheduler loads event definitions which correspond to the host
-on which it is running. All such files are read in as event definitions;
-the directory structure below events/ is for the user and is unimportant
-to hcron-scheduler.
+From the tree above, the hcron-scheduler loads event definitions which
+correspond to the host on which it is running. Event definitions are read
+from the events/ tree, and include files are read from the includes/ tree.
 
 .SH EVENT DEFINTION FILE
 .PP
 Each event definition is contained in a single, plain text file. Each
 line consists of a name=value setting. Empty lines and those starting
 with # are ignored. There is no support for line continuation.
+
+.PP
+The following directives are recognized:
+
+.TP
+.B include <name>
+the include file stored under the "includes" directory. <name> should be
+start with a /, and is relative to the "includes" directory.
 
 .PP
 The following fields are recognized:
