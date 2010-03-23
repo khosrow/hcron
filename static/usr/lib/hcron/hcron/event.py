@@ -662,6 +662,7 @@ def hcronVariableSubstitution2(value, varInfo, depth=1):
                 for i in xrange(len(ll)):
                     ll[i] = hcronVariableSubstitution2(ll[i], varInfo, depth+1)
                     #open("/tmp/hc", "a").write("---- ll (%s) i (%s) ll[i] (%s)\n" % (str(ll), i, ll[i]))
+                    # normalize: empty -> None
                     irl = [ el != "" and el or None for el in SUBST_SLICE_CRE.match(ll[i]).groups() ]
                     #open("/tmp/hc", "a").write("------- irl (%s)\n" % str(irl))
                     start, endColon, end, stepColon, step = irl[0:5]
@@ -669,22 +670,22 @@ def hcronVariableSubstitution2(value, varInfo, depth=1):
                     end = hcronVariableSubstitution2(end, varInfo, depth+1)
                     step = hcronVariableSubstitution2(step, varInfo, depth+1)
 
-                    if start != "":
+                    if start != None:
                         start = int(start)
-                    if end == None:
+                    if end != None:
+                        end = int(end)
+                    else:
                         if endColon == None:
                             end = start+1
                         else:
                             end = None
+                    if step != None:
+                        step = int(step)
                     else:
-                        end = int(end)
-                    if step == None:
                         if stepColon == None:
                             step = 1
                         else:
                             step = None
-                    else:
-                        step = int(step)
                     ll[i] = substCombineSep.join(nameValues[start:end:step])
                     #open("/tmp/hc", "a").write("------------ ll[i] (%s)\n" % str(ll[i]))
             elif substBracket == "{":
