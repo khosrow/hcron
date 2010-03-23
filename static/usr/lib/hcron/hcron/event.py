@@ -422,20 +422,21 @@ class Event:
                     self.reason = "not fully specified, missing field (%s)" % name
                     raise BadEventDefinitionException("Ignored event file (%s). Missing field (%s)." % \
                         (self.path, name))
+
+            self.when = "%s %s %s %s %s %s" % \
+                (varInfo.get("when_year"),
+                    varInfo.get("when_month"),
+                    varInfo.get("when_day"),
+                    varInfo.get("when_hour"),
+                    varInfo.get("when_minute"),
+                    varInfo.get("when_dow"))
+
+            self.assignments = assignments
+            self.masks = masks
+
         except:
             if self.reason == None:
                 self.reason = "unknown problem"
-
-        self.when = "%s %s %s %s %s %s" % \
-            (varInfo.get("when_year"),
-                varInfo.get("when_month"),
-                varInfo.get("when_day"),
-                varInfo.get("when_hour"),
-                varInfo.get("when_minute"),
-                varInfo.get("when_dow"))
-
-        self.assignments = assignments
-        self.masks = masks
 
     def __repr__(self):
         return """<Event name (%s) when (%s)>""" % (self.name, self.when)
