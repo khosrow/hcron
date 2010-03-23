@@ -178,6 +178,8 @@ def copytree(src, dst, srcUid):
         seteuid(0)
 
 def getEventsHome(userName):
+    """Returns the user-specific events/ directory path.
+    """
     config = globals.config.get()
     eventsBasePath = (config.get("eventsBasePath") or "").strip()
 
@@ -191,6 +193,22 @@ def getEventsHome(userName):
 
     return path
 
+def getIncludesHome(userName):
+    """Returns the user-specific includes/ directory path.
+    """
+    config = globals.config.get()
+    eventsBasePath = (config.get("eventsBasePath") or "").strip()
+
+    if eventsBasePath == "":
+        path = os.path.expanduser("~%s/.hcron/%s/includes" % (userName, HOST_NAME))
+    else:
+        path = os.path.join(eventsBasePath, userName, ".hcron/%s/includes" % HOST_NAME)
+
+    if path.startswith("~"):
+        return None
+
+    return path
+    
 def getEventsHome_snapshot(userName):
     path = os.path.join(HCRON_EVENTS_SNAPSHOT_HOME, userName)
 

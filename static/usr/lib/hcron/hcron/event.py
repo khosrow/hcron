@@ -37,7 +37,7 @@ import time
 # app imports
 from hcron.constants import *
 import hcron.globals as globals
-from hcron.library import WHEN_BITMASKS, WHEN_INDEXES, WHEN_MIN_MAX, listStToBitmask, dirWalk, getEventsHome
+from hcron.library import WHEN_BITMASKS, WHEN_INDEXES, WHEN_MIN_MAX, listStToBitmask, dirWalk, getEventsHome, getIncludesHome
 from hcron.notify import sendEmailNotification
 from hcron.execute import remoteExecute
 from hcron.logger import *
@@ -374,6 +374,36 @@ class Event:
 
         return varInfo
 
+    def load_file(self, path):
+        l = []
+
+        st = open(path, "r").read()
+        for line in st.split("\n"):
+            line = line.strip()
+            if line.startswith("#") or line == "":
+                continue
+            l.append(line)
+
+        return l
+
+    def process_includes(self, lines, depth=1):
+        if depth > 3:
+            raise Exception("Reached include depth maximum (%s)." % depth)
+
+        l = []
+        for line in lines:
+            t = line.split()
+            if len(t) == 2 and t[0] == "include":
+                include_name = t[1]
+                path = self.resolveIncludeNameToPath(include_name)
+                lines2 = self.load_file(path)
+                lines2 = self.process_includes(lines2, depth+1)
+                l.extend(lines2)
+            else:
+                l.append(line)
+
+        return l
+
     def load(self):
         varInfo = self.getVarInfo()
 
@@ -383,13 +413,19 @@ class Event:
 
         try:
             try:
-                st = open(self.path, "r").read()
+                lines = self.load_file(self.path)
             except Exception, detail:
                 self.reason = "cannot load file"
                 raise CannotLoadFileException("Ignored event file (%s)." % self.path)
 
             try:
-                assignments = load_assignments(st)
+                lines = self.process_includes(lines)
+            except Exception, detail:
+                self.reason = "cannot process include(s)"
+                raise CannotLoadFileException("Ignored event file (%s)." % self.path)
+
+            try:
+                assignments = load_assignments(lines)
             except Exception, detail:
                 self.reason = "bad definition"
                 raise BadEventDefinitionException("Ignored event file (%s)." % self.path)
@@ -498,11 +534,24 @@ class Event:
             nextEventName = event_failover_event
 
         # handle None, "", and valid string
-        nextEventName = nextEventName and self.resolveEventName(nextEventName.strip()) or None
+        nextEventName = nextEventName and self.resolveEventNameToName(nextEventName.strip()) or None
 
         return nextEventName
 
-    def resolveEventName(self, name):
+    def resolveIncludeNameToPath(self, name):
+        """Resolve include name relative to the includes/ directory.
+
+        name must start with /; otherwise return None.
+        """
+        path = None
+        if name.startswith("/"):
+            includes_home = getIncludesHome(self.userName)
+            if includes_home:
+                path = os.path.join(includes_home, os.path.normpath(name)[1:])
+
+        return path
+
+    def resolveEventNameToName(self, name):
         """Resolve event name relative to the current event.
         
         1) relative to .../events, if starts with "/"
@@ -708,16 +757,13 @@ def hcronVariableSubstitution2(value, varInfo, depth=1):
 
     return value
 
-def load_assignments(st):
+def load_assignments(lines):
     """Load lines with the format name=value into a list of
     (name, value) tuples.
     """
     l = []
 
-    for line in st.split("\n"):
-        line = line.strip()
-        if line.startswith("#") or line == "":
-            continue
+    for line in lines:
         name, value  = line.split("=", 1)
         l.append((name.strip(), value.strip()))
 
