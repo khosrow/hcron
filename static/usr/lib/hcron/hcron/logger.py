@@ -35,7 +35,7 @@ import hcron.globals as globals
 # globals
 logger = None
 
-def setupLogger():
+def setup_logger():
     global logger
 
     config = globals.config.get()
@@ -51,65 +51,65 @@ def setupLogger():
     logger.setLevel(logging.INFO)
     logger.info("Starting hcron logging...")
 
-def getDatestamp():
+def get_datestamp():
     return datetime.today().isoformat()
 
-def logAny(*args):
+def log_any(*args):
     """Get around chicken and egg problem with logger.
     """
-    global logger, logAny
+    global logger, log_any
 
     if logger:
-        logAny = logAny2
+        log_any = log_any2
 
-def logAny2(op, userName="", *args):
+def log_any2(op, userName="", *args):
     global logger
 
     if args:
         extra = ":".join([ str(el) for el in args ])
     else:
         extra = ""
-    logger.info("%s:%s:%s:%s" % (getDatestamp(), op, userName, extra))
+    logger.info("%s:%s:%s:%s" % (get_datestamp(), op, userName, extra))
 
-def logMessage(typ, msg):
-    logAny("message", "", typ, msg)
+def log_message(typ, msg):
+    log_any("message", "", typ, msg)
 
-def logStart():
-    logAny("start")
+def log_start():
+    log_any("start")
 
-def logEnd():
-    logAny("end")
+def log_end():
+    log_any("end")
 
-def logLoadConfig():
-    logAny("load-config")
+def log_load_config():
+    log_any("load-config")
 
-def logLoadAllow():
-    logAny("load-allow")
+def log_load_allow():
+    log_any("load-allow")
 
-def logLoadEvents(userName, count, elapsed):
-    logAny("load-events", userName, count, elapsed)
+def log_load_events(userName, count, elapsed):
+    log_any("load-events", userName, count, elapsed)
 
-def logChainEvents(userName, eventName0, eventName1, cycleDetected=False):
+def log_chain_events(userName, eventName0, eventName1, cycleDetected=False):
     cycleMsg = cycleDetected and " (cycle detected)" or ""
-    logAny("chain-events", userName, "%s -> %s%s" % (eventName0, eventName1, cycleMsg))
+    log_any("chain-events", userName, "%s -> %s%s" % (eventName0, eventName1, cycleMsg))
 
-def logDiscardEvents(userName, count):
-    logAny("discard-events", userName, count)
+def log_discard_events(userName, count):
+    log_any("discard-events", userName, count)
 
-def logExecute(userName, asUser, host, eventName, retVal):
-    logAny("execute", userName, asUser, host, eventName, retVal)
+def log_execute(userName, asUser, host, eventName, retVal):
+    log_any("execute", userName, asUser, host, eventName, retVal)
 
-def logAlarm():
-    logAny("alarm")
+def log_alarm():
+    log_any("alarm")
 
-def logNotifyEmail(userName, addrs, eventName):
-    logAny("notify-email", userName, addrs, eventName)
+def log_notify_email(userName, addrs, eventName):
+    log_any("notify-email", userName, addrs, eventName)
 
-def logWork(count, elapsed):
-    logAny("work", "", count, elapsed)
+def log_work(count, elapsed):
+    log_any("work", "", count, elapsed)
 
-def logExit():
-    logAny("exit")
+def log_exit():
+    log_any("exit")
 
-def logSleep(seconds):
-    logAny("sleep", "", seconds)
+def log_sleep(seconds):
+    log_any("sleep", "", seconds)

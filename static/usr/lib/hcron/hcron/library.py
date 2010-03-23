@@ -52,7 +52,7 @@ WHEN_MIN_MAX = {
 
 WHEN_BITMASKS = dict([(key, 2**(mx-mn+1)-1) for key, (mn,mx) in WHEN_MIN_MAX.items() ])
 
-def dateToBitmasks(*y_m_d_h_m_dow):
+def date_to_bitmasks(*y_m_d_h_m_dow):
     """Mark the bit positions for year, month, day, etc.
     """
     datemasks = []
@@ -70,7 +70,7 @@ def dateToBitmasks(*y_m_d_h_m_dow):
         datemasks[i] = 2**(m_d_h_m_dow[i]-1)
     return datemasks
     
-def listStToBitmask(st, minMax, fullBitmask):
+def list_st_to_bitmask(st, minMax, fullBitmask):
     """Using offset allows one to support small, but arbitrary ranges
     as bitmasks. The following is easier to understand for offset==0
     (e.g., hours, minutes, seconds).
@@ -114,7 +114,7 @@ def listStToBitmask(st, minMax, fullBitmask):
     return mask
 
 # hcron-specific signature
-def dirWalk(top, topdown=True, onerror=None, ignoreMatchFn=None):
+def dir_walk(top, topdown=True, onerror=None, ignoreMatchFn=None):
     """This is a slightly modified version of os.walk (python v2.4).
     """
     from os.path import join, isdir, islink
@@ -144,7 +144,7 @@ def dirWalk(top, topdown=True, onerror=None, ignoreMatchFn=None):
     for name in dirs:
         path = join(top, name)
         if not islink(path):
-            for x in dirWalk(path, topdown, onerror, ignoreMatchFn):
+            for x in dir_walk(path, topdown, onerror, ignoreMatchFn):
                 yield x
     if not topdown:
         yield top, dirs, nondirs
@@ -177,7 +177,7 @@ def copytree(src, dst, srcUid):
     except:
         seteuid(0)
 
-def getEventsHome(userName):
+def get_events_home(userName):
     """Returns the user-specific events/ directory path.
     """
     config = globals.config.get()
@@ -193,7 +193,7 @@ def getEventsHome(userName):
 
     return path
 
-def getIncludesHome(userName):
+def get_includes_home(userName):
     """Returns the user-specific includes/ directory path.
     """
     config = globals.config.get()
@@ -209,7 +209,7 @@ def getIncludesHome(userName):
 
     return path
     
-def getEventsHome_snapshot(userName):
+def get_events_home_snapshot(userName):
     path = os.path.join(HCRON_EVENTS_SNAPSHOT_HOME, userName)
 
     return path

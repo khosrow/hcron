@@ -37,12 +37,12 @@ import time
 # app imports
 from hcron.constants import *
 import hcron.globals as globals
-from hcron.library import WHEN_BITMASKS, WHEN_INDEXES, WHEN_MIN_MAX, listStToBitmask, dirWalk, getEventsHome, getIncludesHome
-from hcron.notify import sendEmailNotification
-from hcron.execute import remoteExecute
+from hcron.library import WHEN_BITMASKS, WHEN_INDEXES, WHEN_MIN_MAX, list_st_to_bitmask, dir_walk, get_events_home, get_includes_home
+from hcron.notify import send_email_notification
+from hcron.execute import remote_execute
 from hcron.logger import *
 
-def signalReload():
+def signal_reload():
     """Signal to reload.
     """
     import tempfile
@@ -62,7 +62,7 @@ def signalReload():
     except:
         raise Exception("Error: Could not signal for reload.")
 
-def handleEvents(events):
+def handle_events(events):
     """Handle all events given and chain events as specified in the
     events being handled.
 
@@ -98,19 +98,19 @@ def handleEvents(events):
             eventChainNames = []
 
             while event:
-                eventChainNames.append(event.getName())
+                eventChainNames.append(event.get_name())
 
-                #logMessage("info", "Processing event (%s)." % event.getName())
+                #log_message("info", "Processing event (%s)." % event.get_name())
                 try:
                     nextEventName = event.activate(eventChainNames)
                 except Exception, detail:
-                    logMessage("error", "handleEvents (%s)" % detail)
+                    log_message("error", "handle_events (%s)" % detail)
                     nextEventName = None
     
                 if nextEventName == None:
                     break
 
-                logChainEvents(event.userName, event.getName(), nextEventName, cycleDetected=(nextEventName in eventChainNames))
+                log_chain_events(event.userName, event.get_name(), nextEventName, cycleDetected=(nextEventName in eventChainNames))
 
                 # allow cycles up to a limit
                 #if nextEventName in eventChainNames:
@@ -131,7 +131,7 @@ def handleEvents(events):
         pid, status = os.waitpid(0, 0)
         del childPids[pid]
 
-def reloadEvents(signalHomeMtime):
+def reload_events(signalHomeMtime):
     """Reload events for all users whose signal file mtime is <= to
     that of the signal home directory. Any signal files that are
     created subsequently, will be caught in the next pass.
@@ -154,7 +154,7 @@ def reloadEvents(signalHomeMtime):
             try:
                 os.remove(path) # remove singles and multiples
             except Exception, detail:
-                logMessage("warning", "Could not remove signal file (%s)." % path)
+                log_message("warning", "Could not remove signal file (%s)." % path)
 
 class CannotLoadFileException(Exception):
     pass
@@ -174,7 +174,7 @@ class EventListList:
     All event lists are keyed on user name.
     """
     def __init__(self, userNames):
-        logMessage("info", "Initializing events list.")
+        log_message("info", "Initializing events list.")
         self.load(userNames)
 
     def get(self, userName):
@@ -183,7 +183,7 @@ class EventListList:
     def load(self, userNames=None):
         """Load from scratch.
         """
-        logMessage("info", "Loading events.")
+        log_message("info", "Loading events.")
 
         t0 = time.time()
         self.eventLists = {}
@@ -207,13 +207,13 @@ class EventListList:
         if el:
             self.eventLists[userName] = el
             count = len(el.events)
-            logLoadEvents(userName, count, t1-t0)
+            log_load_events(userName, count, t1-t0)
 
     def remove(self, userName):
         if userName in self.eventLists:
             count = len(self.eventLists[userName].events)
 
-            logDiscardEvents(userName, count)
+            log_discard_events(userName, count)
             del self.eventLists[userName]
 
     def test(self, datemasks, userNames=None):
@@ -243,7 +243,7 @@ class EventList:
 
     def load(self):
         self.events = {}
-        eventsHome = getEventsHome(self.userName)
+        eventsHome = get_events_home(self.userName)
 
         if eventsHome == None:
             return
@@ -258,7 +258,7 @@ class EventList:
             namesToIgnoreCregexp = globals.config.get().get("namesToIgnoreCregexp")
             ignoreMatchFn = namesToIgnoreCregexp and namesToIgnoreCregexp.match
 
-            for root, dirNames, fileNames in dirWalk(eventsHome, ignoreMatchFn=ignoreMatchFn):
+            for root, dirNames, fileNames in dir_walk(eventsHome, ignoreMatchFn=ignoreMatchFn):
                 for fileName in fileNames:
                     path = os.path.join(root, fileName)
 
@@ -274,10 +274,10 @@ class EventList:
 
                     if len(self.events) >= maxEventsPerUser:
                         event.reason = "maximum events reached"
-                        logMessage("warning", "Reached maximum events allowed (%s)." % maxEventsPerUser)
+                        log_message("warning", "Reached maximum events allowed (%s)." % maxEventsPerUser)
 
         except Exception, detail:
-            logMessage("error", "Could not load events.")
+            log_message("error", "Could not load events.")
 
         os.seteuid(0)  # guarantee return to uid 0
 
@@ -319,7 +319,7 @@ class EventList:
 
         os.umask(oldUmask)
 
-    def printEvents(self):
+    def print_events(self):
         for name, event in self.events.items():
             print "name (%s) event (%s)" % (name, event)
 
@@ -340,13 +340,13 @@ class Event:
         self.reason = None
         self.load()
 
-    def getName(self):
+    def get_name(self):
         return self.name
 
-    def getPath(self):
+    def get_path(self):
         return self.path
 
-    def getVarInfo(self, eventChainNames=None):
+    def get_var_info(self, eventChainNames=None):
         dt_utc = datetime.utcnow()
         dt_local = datetime.now()
 
@@ -395,7 +395,7 @@ class Event:
             t = line.split()
             if len(t) == 2 and t[0] == "include":
                 include_name = t[1]
-                path = self.resolveIncludeNameToPath(include_name)
+                path = self.resolve_include_name_to_path(include_name)
                 lines2 = self.load_file(path)
                 lines2 = self.process_includes(lines2, depth+1)
                 l.extend(lines2)
@@ -405,10 +405,10 @@ class Event:
         return l
 
     def load(self):
-        varInfo = self.getVarInfo()
+        varInfo = self.get_var_info()
 
         masks = {
-            WHEN_INDEXES["when_year"]: listStToBitmask("*", WHEN_MIN_MAX["when_year"], WHEN_BITMASKS["when_year"]),
+            WHEN_INDEXES["when_year"]: list_st_to_bitmask("*", WHEN_MIN_MAX["when_year"], WHEN_BITMASKS["when_year"]),
         }
 
         try:
@@ -446,7 +446,7 @@ class Event:
             try:
                 for name, value in varInfo.items():
                     if name.startswith("when_"):
-                        masks[WHEN_INDEXES[name]] = listStToBitmask(value, WHEN_MIN_MAX[name], WHEN_BITMASKS[name])
+                        masks[WHEN_INDEXES[name]] = list_st_to_bitmask(value, WHEN_MIN_MAX[name], WHEN_BITMASKS[name])
     
             except Exception, detail:
                 self.reason = "bad when_* setting"
@@ -488,7 +488,7 @@ class Event:
                     return 0
             except Exception, detail:
                 # should not get here
-                logMessage("error", "detail (%s) self.reason (%s) user (%s) name (%s) when (%s)." % \
+                log_message("error", "detail (%s) self.reason (%s) user (%s) name (%s) when (%s)." % \
                     (detail, self.reason, self.userName, self.name, self.when))
                 return 0
 
@@ -497,7 +497,7 @@ class Event:
     def activate(self, eventChainNames=None):
         """Activate event and return next event in chain.
         """
-        varInfo = self.getVarInfo(eventChainNames)
+        varInfo = self.get_var_info(eventChainNames)
 
         # late substitution
         eval_assignments(self.assignments, varInfo)
@@ -518,14 +518,14 @@ class Event:
         if event_host == "":
             retVal = 0
         else:
-            retVal = remoteExecute(self.name, self.userName, event_as_user, event_host, event_command)
+            retVal = remote_execute(self.name, self.userName, event_as_user, event_host, event_command)
 
         if retVal == 0:
             # success
             # notify
             if event_notify_email:
                 subject = """hcron: "%s" executed at %s@%s""" % (self.name, event_as_user, event_host)
-                sendEmailNotification(self.name, self.userName, event_notify_email, subject, event_notify_message)
+                send_email_notification(self.name, self.userName, event_notify_email, subject, event_notify_message)
     
             nextEventName = event_next_event
     
@@ -534,24 +534,24 @@ class Event:
             nextEventName = event_failover_event
 
         # handle None, "", and valid string
-        nextEventName = nextEventName and self.resolveEventNameToName(nextEventName.strip()) or None
+        nextEventName = nextEventName and self.resolve_event_name_to_name(nextEventName.strip()) or None
 
         return nextEventName
 
-    def resolveIncludeNameToPath(self, name):
+    def resolve_include_name_to_path(self, name):
         """Resolve include name relative to the includes/ directory.
 
         name must start with /; otherwise return None.
         """
         path = None
         if name.startswith("/"):
-            includes_home = getIncludesHome(self.userName)
+            includes_home = get_includes_home(self.userName)
             if includes_home:
                 path = os.path.join(includes_home, os.path.normpath(name)[1:])
 
         return path
 
-    def resolveEventNameToName(self, name):
+    def resolve_event_name_to_name(self, name):
         """Resolve event name relative to the current event.
         
         1) relative to .../events, if starts with "/"
@@ -568,7 +568,7 @@ import re
 
 SUBST_NAME_RE = "(?P<op>[#$])(?P<name>HCRON_\w*)"
 SUBST_NAME_CRE = re.compile(SUBST_NAME_RE)
-def searchNameSelect(st, lastPos):
+def search_name_select(st, lastPos):
     """Find startPos and endPos for:
     1. [#$]<name>[<body>]
     2. [#$]<name>{<body>}
@@ -616,7 +616,7 @@ SUBST_SEP_LIST_CRE = re.compile(SUBST_SEP_LIST_RE)
 SUBST_LIST_CRE = re.compile(SUBST_LIST_RE)
 SUBST_SLICE_CRE = re.compile(SUBST_SLICE_RE)
 
-def hcronVariableSubstitution(value, varInfo, depth=1):
+def hcron_variable_substitution(value, varInfo, depth=1):
     """Perform variable substitution.
 
     Search for substitutable segments, substitute, repeat. Once a
@@ -631,13 +631,13 @@ def hcronVariableSubstitution(value, varInfo, depth=1):
                 break
             startPos, endPos = s.span()
 
-        startPos, endPos = searchNameSelect(value, lastPos)
+        startPos, endPos = search_name_select(value, lastPos)
 
         if startPos == None:
             break
 
         l.append(value[lastPos:startPos])
-        l.append(hcronVariableSubstitution2(value[startPos:endPos], varInfo))
+        l.append(hcron_variable_substitution2(value[startPos:endPos], varInfo))
         lastPos = endPos
 
     l.append(value[lastPos:])
@@ -646,7 +646,7 @@ def hcronVariableSubstitution(value, varInfo, depth=1):
 
     return "".join(l)
 
-def hcronVariableSubstitution2(value, varInfo, depth=1):
+def hcron_variable_substitution2(value, varInfo, depth=1):
     """Recursively resolve all variables in value with settings in
     varInfo. The mechanism is:
     1) match
@@ -671,7 +671,7 @@ def hcronVariableSubstitution2(value, varInfo, depth=1):
             substSelect = nid.get("curly_select", "")
         else:
             substSelect = None
-        substSelect = hcronVariableSubstitution2(substSelect, varInfo, depth+1)
+        substSelect = hcron_variable_substitution2(substSelect, varInfo, depth+1)
 
 
         if substSelect == None:
@@ -688,11 +688,11 @@ def hcronVariableSubstitution2(value, varInfo, depth=1):
             elif substSplitSep == "":
                 pass
             else:
-                substSplitSep = hcronVariableSubstitution2(substSplitSep, varInfo, depth+1)
+                substSplitSep = hcron_variable_substitution2(substSplitSep, varInfo, depth+1)
             if substCombineSep == None:
                 substCombineSep = substSplitSep
             else:
-                substCombineSep = hcronVariableSubstitution2(substCombineSep, varInfo, depth+1)
+                substCombineSep = hcron_variable_substitution2(substCombineSep, varInfo, depth+1)
 
             if substSplitSep == "":
                 nameValues = list(nameValues)
@@ -700,7 +700,7 @@ def hcronVariableSubstitution2(value, varInfo, depth=1):
                 nameValues = nameValue.split(substSplitSep)
 
             substList = sid["list"]
-            substList = hcronVariableSubstitution2(substList, varInfo, depth+1)
+            substList = hcron_variable_substitution2(substList, varInfo, depth+1)
 
             # fix RE to avoid having to check for None for single list value
             ll = substList.split(",")
@@ -709,15 +709,15 @@ def hcronVariableSubstitution2(value, varInfo, depth=1):
             if substBracket == "[":
                 # indexing
                 for i in xrange(len(ll)):
-                    ll[i] = hcronVariableSubstitution2(ll[i], varInfo, depth+1)
+                    ll[i] = hcron_variable_substitution2(ll[i], varInfo, depth+1)
                     #open("/tmp/hc", "a").write("---- ll (%s) i (%s) ll[i] (%s)\n" % (str(ll), i, ll[i]))
                     # normalize: empty -> None
                     irl = [ el != "" and el or None for el in SUBST_SLICE_CRE.match(ll[i]).groups() ]
                     #open("/tmp/hc", "a").write("------- irl (%s)\n" % str(irl))
                     start, endColon, end, stepColon, step = irl[0:5]
-                    start = hcronVariableSubstitution2(start, varInfo, depth+1)
-                    end = hcronVariableSubstitution2(end, varInfo, depth+1)
-                    step = hcronVariableSubstitution2(step, varInfo, depth+1)
+                    start = hcron_variable_substitution2(start, varInfo, depth+1)
+                    end = hcron_variable_substitution2(end, varInfo, depth+1)
+                    step = hcron_variable_substitution2(step, varInfo, depth+1)
 
                     if start != None:
                         start = int(start)
@@ -739,7 +739,7 @@ def hcronVariableSubstitution2(value, varInfo, depth=1):
                     #open("/tmp/hc", "a").write("------------ ll[i] (%s)\n" % str(ll[i]))
             elif substBracket == "{":
                 # matching: substitute, match, flatten
-                ll = [ hcronVariableSubstitution2(x, varInfo, depth+1) for x in ll ]
+                ll = [ hcron_variable_substitution2(x, varInfo, depth+1) for x in ll ]
                 #open("/tmp/hc", "a").write("---- ll (%s) nameValues (%s)\n" % (str(ll), nameValues))
                 ll = [ el for x in ll for el in fnmatch.filter(nameValues, x) ]
                 #open("/tmp/hc", "a").write("------ ll (%s)\n" % str(ll))
@@ -774,6 +774,6 @@ def eval_assignments(assignments, varInfo):
     results back to varInfo.
     """
     for name, value in assignments:
-        varInfo[name] = hcronVariableSubstitution(value, varInfo)
+        varInfo[name] = hcron_variable_substitution(value, varInfo)
 
 

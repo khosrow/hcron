@@ -29,13 +29,13 @@ import sys
 
 # app import
 from hcron.constants import *
-from hcron.event import signalReload
+from hcron.event import signal_reload
 
 # constants
 EDITOR = os.environ.get("EDITOR", "vi")
 PROG_NAME = os.path.basename(sys.argv[0])
 
-def printUsage(progName):
+def print_usage(progName):
     print """\
 usage: %s [-c] [-y|-n] <path> [...]
        %s [-h|--help]
@@ -59,7 +59,7 @@ if __name__ == "__main__":
         arg = args.pop(0)
 
         if arg in [ "-h", "--help" ]:
-            printUsage(PROG_NAME)
+            print_usage(PROG_NAME)
             sys.exit(0)
         elif arg in [ "-y" ]:
             reload = True
@@ -74,7 +74,7 @@ if __name__ == "__main__":
     paths = args
 
     if len(paths) < 1:
-        printUsage(PROG_NAME)
+        print_usage(PROG_NAME)
         sys.exit(-1)
 
     for path in paths:
@@ -94,7 +94,7 @@ if __name__ == "__main__":
     if reload in [ None, True ]:
         try:
             if reload == True or raw_input("Reload events (y/n)? ") in [ "y" ]:
-                signalReload()
+                signal_reload()
                 print "Reload signalled for this machine (%s)." % HOST_NAME
             else:
                 print "Reload deferred."

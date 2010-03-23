@@ -48,12 +48,12 @@ class TrackableFile:
     def load(self):
         pass
 
-    def isModified(self):
+    def is_modified(self):
         if self.path:
             mtime = os.stat(self.path)[stat.ST_MTIME]
             return mtime != self.mtime
 
-    def getModifiedTime(self):
+    def get_modified_time(self):
         return self.mtime
 
     def get(self):
@@ -67,9 +67,9 @@ class ConfigFile(TrackableFile):
             mtime = os.stat(self.path)[stat.ST_MTIME]
             st = open(self.path, "r").read()
             d = safe_eval(st)
-            logLoadConfig()
+            log_load_config()
         except Exception, detail:
-            logMessage("error", "Cannot load hcron.config file (%s)." % self.path)
+            log_message("error", "Cannot load hcron.config file (%s)." % self.path)
             sys.exit(-1)
 
         # augment
@@ -98,9 +98,9 @@ class AllowedUsersFile(TrackableFile):
                 if userName != "":
                     allowedUsers.append(userName)
 
-            logLoadAllow()
+            log_load_allow()
         except Exception, detail:
-                logMessage("error", "Cannot load hcron.allow file (%s)." % self.path)
+                log_message("error", "Cannot load hcron.allow file (%s)." % self.path)
 
         self.contents = list(set(allowedUsers))
         self.mtime = mtime
@@ -119,9 +119,9 @@ class old_AllowedUsersFile(TrackableFile):
                     userName = line
                     if userName != "":
                         allowedUsers.append(userName)
-                logLoadAllow()
+                log_load_allow()
             except Exception, detail:
-                logMessage("error", "Cannot load hcron.allow file (%s)." % self.path)
+                log_message("error", "Cannot load hcron.allow file (%s)." % self.path)
         else:
             allowedUsers = [ USER_NAME ]
 
@@ -133,7 +133,7 @@ class SignalHome(TrackableFile):
         try:
             self.mtime = os.stat(self.path)[stat.ST_MTIME]
         except Exception, detail:
-            logMessage("error", "Cannot stat signal directory (%s)." % self.path)
+            log_message("error", "Cannot stat signal directory (%s)." % self.path)
             raise
 
 class PidFile:
@@ -143,16 +143,16 @@ class PidFile:
     def create(self):
         try:
             pid = open(self.path, "r").read()
-            logMessage("error", "Cannot create pid file (%s)." % self.path)
+            log_message("error", "Cannot create pid file (%s)." % self.path)
         except Exception, detail:
-            logMessage("info", "Creating pid file (%s)." % self.path)
+            log_message("info", "Creating pid file (%s)." % self.path)
             pid = os.getpid()
             open(self.path, "w").write("%s" % pid)
         return int(pid)
 
     def remove(self):
         try:
-            logMessage("info", "Removing pid file (%s)." % self.path)
+            log_message("info", "Removing pid file (%s)." % self.path)
             os.remove(self.path)
         except Exception, detail:
-            logMessage("error", "Cannot remove pid file (%s)." % self.path)
+            log_message("error", "Cannot remove pid file (%s)." % self.path)

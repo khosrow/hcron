@@ -34,7 +34,7 @@ import sys
 from hcron.constants import *
 from hcron.event import Event
 
-def convertToEventsMain(args):
+def convert_to_events_main(args):
     # setup
     mailAddr = ""
 
@@ -47,13 +47,13 @@ def convertToEventsMain(args):
             break
 
     if len(args) != 3:
-        printUsage(PROG_NAME)
+        print_usage(PROG_NAME)
         sys.exit(-1)
     else:
         hostName, crontabPath, dirPath = args
-    convertToEvents(hostName, crontabPath, dirPath, mailAddr=mailAddr)
+    convert_to_events(hostName, crontabPath, dirPath, mailAddr=mailAddr)
 
-def convertToEvents(hostName, crontabPath, dirPath, mailAddr=""):
+def convert_to_events(hostName, crontabPath, dirPath, mailAddr=""):
     try:
         if crontabPath == "-":
             crontabFile = sys.stdin
@@ -133,7 +133,7 @@ def convertToEvents(hostName, crontabPath, dirPath, mailAddr=""):
         except Exception, detail:
             raise Exception("Error: Could not create event definition file (%s)." % path)
 
-def convertToCrontabMain(args):
+def convert_to_crontab_main(args):
     # setup
     remoteShell = "ssh"
 
@@ -145,14 +145,14 @@ def convertToCrontabMain(args):
             args.insert(0, arg)
             break
     if len(args) != 2:
-        printUsage(PROG_NAME)
+        print_usage(PROG_NAME)
         sys.exit(-1)
     else:
         crontabPath, dirPath = args
 
-    convertToCrontab(crontabPath, dirPath, remoteShell=remoteShell)
+    convert_to_crontab(crontabPath, dirPath, remoteShell=remoteShell)
 
-def convertToCrontab(crontabPath, dirPath, remoteShell):
+def convert_to_crontab(crontabPath, dirPath, remoteShell):
     try:
         if crontabPath == "-":
             crontabFile = sys.stdout
@@ -183,7 +183,7 @@ def convertToCrontab(crontabPath, dirPath, remoteShell):
     crontabFile.write("\n".join(l))
     crontabFile.close()
 
-def printUsage(progName):
+def print_usage(progName):
     print """\
 usage: %s --to-events [options] <hostName> <crontabPath> <dirPath>
        %s --to-crontab [options] <crontabPath> <dirPath>
@@ -211,17 +211,17 @@ Where --to-crontab options are:
 if __name__ == "__main__":
     args = sys.argv[1:]
     if len(args) < 1 or args[0] in [ "-h", "--help" ]:
-        printUsage(PROG_NAME)
+        print_usage(PROG_NAME)
         sys.exit(0)
 
     try:
         arg = args.pop(0)
         if arg == "--to-events":
-            convertToEventsMain(args)
+            convert_to_events_main(args)
         elif arg == "--to-crontab":
-            convertToCrontabMain(args)
+            convert_to_crontab_main(args)
         else:
-            printUsage(PROG_NAME)
+            print_usage(PROG_NAME)
     except SystemExit, detail:
         raise
     except Exception, detail:

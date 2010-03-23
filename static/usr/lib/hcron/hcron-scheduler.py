@@ -46,9 +46,9 @@ from hcron.file import AllowedUsersFile, ConfigFile, PidFile, SignalHome
 from hcron.logger import *
 from hcron.server import Server
 
-def dumpSignalHandler(num, frame):
-    logMessage("info", "Received signal to dump.")
-    signal.signal(num, dumpSignalHandler)
+def dump_signal_handler(num, frame):
+    log_message("info", "Received signal to dump.")
+    signal.signal(num, dump_signal_handler)
     pp = pprint.PrettyPrinter(indent=4)
 
     # config
@@ -77,17 +77,17 @@ def dumpSignalHandler(num, frame):
         if el:
             el.dump()
 
-def reloadSignalHandler(num, frame):
-    logMessage("info", "Received signal to reload.")
-    signal.signal(num, reloadSignalHandler)
+def reload_signal_handler(num, frame):
+    log_message("info", "Received signal to reload.")
+    signal.signal(num, reload_signal_handler)
     globals.eventListList.load(globals.allowedUsers.get())
 
-def quitSignalHandler(num, frame):
-    logMessage("info", "Received signal to exit.")
+def quit_signal_handler(num, frame):
+    log_message("info", "Received signal to exit.")
     globals.pidFile.remove()
     sys.exit(0)
 
-def printUsage(progName):
+def print_usage(progName):
     print """\
 usage: %s [--immediate]
 
@@ -111,28 +111,28 @@ if __name__ == "__main__":
     args = sys.argv[1:]
     if len(args) > 0:
         if args[0] in [ "-h", "--help" ]:
-            printUsage(progName)
+            print_usage(progName)
             sys.exit(0)
         elif "--immediate" in args:
             # picked up by server.run()
             pass
         else:
-            printUsage(progName)
+            print_usage(progName)
             sys.exit(-1)
 
     #
     # setup
     #
     globals.config = ConfigFile(HCRON_CONFIG_PATH)
-    setupLogger()
+    setup_logger()
     globals.allowedUsers = AllowedUsersFile(HCRON_ALLOW_PATH)
     globals.signalHome = SignalHome(HCRON_SIGNAL_HOME)
     globals.eventListList = EventListList(globals.allowedUsers.get())
 
-    signal.signal(signal.SIGHUP, reloadSignalHandler)
-    #signal.signal(signal.SIGUSR1, dumpSignalHandler)
-    signal.signal(signal.SIGTERM, quitSignalHandler)
-    signal.signal(signal.SIGQUIT, quitSignalHandler)
+    signal.signal(signal.SIGHUP, reload_signal_handler)
+    #signal.signal(signal.SIGUSR1, dump_signal_handler)
+    signal.signal(signal.SIGTERM, quit_signal_handler)
+    signal.signal(signal.SIGQUIT, quit_signal_handler)
     ###signal.signal(signal.SIGCHLD, signal.SIG_IGN)   # we don't care about children/zombies
 
     globals.server = Server()
@@ -141,15 +141,15 @@ if __name__ == "__main__":
     globals.pidFile.create()
 
     try:
-        logStart()
+        log_start()
         globals.server.run()
     except Exception, detail:
-        logMessage("warning", "Unexpected exception (%s)." % detail)
+        log_message("warning", "Unexpected exception (%s)." % detail)
         #import traceback
-        #logMessage("warning", "trace (%s)." % traceback.format_exc())
+        #log_message("warning", "trace (%s)." % traceback.format_exc())
         #print detail
         pass
 
     globals.pidFile.remove()
-    logExit()
+    log_exit()
     sys.exit(-1)

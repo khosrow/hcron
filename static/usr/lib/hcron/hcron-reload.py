@@ -34,12 +34,12 @@ import shutil
 
 # app imports
 from hcron.constants import *
-from hcron.event import signalReload
+from hcron.event import signal_reload
 from hcron.file import ConfigFile
-from hcron.library import copytree, getEventsHome
+from hcron.library import copytree, get_events_home
 from hcron import globals
 
-def makeEventsSnapshot():
+def make_events_snapshot():
     """This depends on python >=v2.5 which creates intermediate
     directories as required.
     """
@@ -51,7 +51,7 @@ def makeEventsSnapshot():
     else:
         src = os.path.join(eventsBasePath, USER_NAME, ".hcron/%s/events" % HOST_NAME)
 
-    dst = getEventsHome(USER_NAME)
+    dst = get_events_home(USER_NAME)
 
     # paranoia
     if not dst.startswith(HCRON_EVENTS_SNAPSHOT_HOME):
@@ -60,7 +60,7 @@ def makeEventsSnapshot():
     shutil.rmtree(dst)
     copytree(src, dst, USER_ID)
 
-def printUsage(progName):
+def print_usage(progName):
     print """\
 usage: %s
 
@@ -76,10 +76,10 @@ if __name__ == "__main__":
     args = sys.argv[1:]
     if len(args) > 0:
         if args[0] in [ "-h", "--help" ]:
-            printUsage(progName)
+            print_usage(progName)
             sys.exit(0)
         else:
-            printUsage(progName)
+            print_usage(progName)
             sys.exit(-1)
 
     #
@@ -88,13 +88,13 @@ if __name__ == "__main__":
     if 0:
         # plan to move this to something like scheduler
         try:
-            makeEventsSnapshot()
+            make_events_snapshot()
         except:
             print "Error: Could not copy events."
             sys.exit(-1)
 
     try:
-        signalReload()
+        signal_reload()
         print "Reload signalled for this machine (%s)." % HOST_NAME
     except Exception, detail:
         #print detail

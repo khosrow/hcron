@@ -32,7 +32,7 @@ from hcron.constants import *
 import hcron.globals as globals
 from hcron.logger import *
 
-def sendEmailNotification(eventName, fromUserName, toAddr, subject, content):
+def send_email_notification(eventName, fromUserName, toAddr, subject, content):
     config = globals.config.get()
     smtpServer = config.get("smtpServer", "localhost")
 
@@ -43,6 +43,6 @@ def sendEmailNotification(eventName, fromUserName, toAddr, subject, content):
         m = smtplib.SMTP(smtpServer)
         m.sendmail(fromAddr, toAddr, message)
         m.quit()
-        logNotifyEmail(fromUserName, toAddr, eventName)
+        log_notify_email(fromUserName, toAddr, eventName)
     except Exception, detail:
-        logMessage("error", "Failed to send email (%s) for event (%s)." % (detail, eventName))
+        log_message("error", "Failed to send email (%s) for event (%s)." % (detail, eventName))

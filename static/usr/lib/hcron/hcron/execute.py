@@ -42,13 +42,13 @@ childPid = None
 class RemoteExecuteException(Exception):
     pass
 
-def alarmHandler(signum, frame):
+def alarm_handler(signum, frame):
     global childPid
 
-    logAlarm()
+    log_alarm()
     os.kill(childPid, signal.SIGKILL)
 
-def remoteExecute(eventName, localUserName, remoteUserName, remoteHostName, command, timeout=None):
+def remote_execute(eventName, localUserName, remoteUserName, remoteHostName, command, timeout=None):
     """Securely execute a command at remoteUserName@remoteHostName from
     localUserName@localhost within timeout time.
 
@@ -56,7 +56,7 @@ def remoteExecute(eventName, localUserName, remoteUserName, remoteHostName, comm
         1) poll+sleep
         2) signal+wait
 
-    childPid is a module global, accessible to the alarmHandler.
+    childPid is a module global, accessible to the alarm_handler.
 
     Return values:
     0   okay
@@ -127,7 +127,7 @@ def remoteExecute(eventName, localUserName, remoteUserName, remoteHostName, comm
 
             else:
                 # signal and wait
-                signal.signal(signal.SIGALRM, alarmHandler)
+                signal.signal(signal.SIGALRM, alarm_handler)
                 signal.alarm(timeout)
                 waitPid, waitStatus = os.waitpid(childPid, 0)
                 signal.signal(signal.SIGALRM, signal.SIG_IGN) # cancel alarm
@@ -139,9 +139,9 @@ def remoteExecute(eventName, localUserName, remoteUserName, remoteHostName, comm
                 retVal = (os.WEXITSTATUS(waitStatus) == 255) and -1 or 0
 
         except Exception, detail:
-            logMessage("error", "Execute failed (%s)." % detail)
+            log_message("error", "Execute failed (%s)." % detail)
 
-    logExecute(localUserName, remoteUserName, remoteHostName, eventName, retVal)
+    log_execute(localUserName, remoteUserName, remoteHostName, eventName, retVal)
 
     return retVal
 

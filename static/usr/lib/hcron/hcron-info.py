@@ -38,7 +38,7 @@ from hcron.constants import *
 # constants
 PROG_NAME = os.path.basename(sys.argv[0])
 
-def printUsage(PROG_NAME):
+def print_usage(PROG_NAME):
     print """\
 usage: %s --allowed
        %s -es
@@ -51,7 +51,7 @@ Where:
 -es                 event statuses
 --fqdn              fully qualified hostname""" % (PROG_NAME, PROG_NAME, PROG_NAME)
 
-def printAllowed():
+def print_allowed():
     try:
         userName = pwd.getpwuid(os.getuid()).pw_name
         userEventListsPath = "%s/%s" % (HCRON_EVENT_LISTS_DUMP_DIR, userName)
@@ -62,13 +62,13 @@ def printAllowed():
     except Exception, detail:
         pass
 
-def printFqdn():
+def print_fqdn():
     try:
         print socket.getfqdn()
     except Exception, detail:
         print "Error: Could not determine the fully qualified host name."
 
-def printUserEventStatus():
+def print_user_event_status():
     try:
         userName = pwd.getpwuid(os.getuid()).pw_name
         userEventListsPath = "%s/%s" % (HCRON_EVENT_LISTS_DUMP_DIR, userName)
@@ -81,29 +81,29 @@ if __name__ == "__main__":
     args = sys.argv[1:]
 
     if len(args) == 0:
-        printUsage(PROG_NAME)
+        print_usage(PROG_NAME)
         sys.exit(-1)
 
     while args:
         arg = args.pop(0)
 
         if arg in [ "--allowed" ]:
-            printAllowed()
+            print_allowed()
             break
 
         if arg in [ "-es" ]:
-            printUserEventStatus()
+            print_user_event_status()
             break
 
         elif arg in [ "--fqdn" ]:
-            printFqdn()
+            print_fqdn()
             break
 
 
         elif arg in [ "-h", "--help" ]:
-            printUsage(PROG_NAME)
+            print_usage(PROG_NAME)
             break
         
         else:
-            printUsage(PROG_NAME)
+            print_usage(PROG_NAME)
             sys.exit(-1)

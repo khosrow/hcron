@@ -33,8 +33,8 @@ from time import sleep, time
 # app imports
 from hcron.constants import *
 import hcron.globals as globals
-from hcron.event import EventListList, handleEvents, reloadEvents
-from hcron.library import dateToBitmasks
+from hcron.event import EventListList, handle_events, reload_events
+from hcron.library import date_to_bitmasks
 from hcron.logger import *
 
 class Server:
@@ -64,7 +64,7 @@ class Server:
         if immediate:
             # special case: run with the current "now" time instead of
             # waiting for the next interval
-            self.runNow(now)
+            self.run_now(now)
 
         while True:
             #
@@ -76,33 +76,33 @@ class Server:
             now = datetime.now()
             delta = (next-now).seconds+2
     
-            logSleep(delta)
+            log_sleep(delta)
             sleep(delta)
             now = datetime.now()
 
             #
             # check and update as necessary
             #
-            if globals.config.isModified():
-                logMessage("info", "hcron.conf was modified")
+            if globals.config.is_modified():
+                log_message("info", "hcron.conf was modified")
                 # restart
                 globals.pidFile.remove()
                 if "--immediate" not in sys.argv:
                     # do not miss current "now" time
                     sys.argv.append("--immediate")
                 os.execv(sys.argv[0], sys.argv)
-            if globals.allowedUsers.isModified():
-                logMessage("info", "hcron.allow was modified")
+            if globals.allowedUsers.is_modified():
+                log_message("info", "hcron.allow was modified")
                 globals.allowedUsers.load()
                 globals.eventListList = EventListList(globals.allowedUsers.get())
-            if globals.signalHome.isModified():
-                logMessage("info", "signalHome was modified")
+            if globals.signalHome.is_modified():
+                log_message("info", "signalHome was modified")
                 globals.signalHome.load()
-                reloadEvents(globals.signalHome.getModifiedTime())
+                reload_events(globals.signalHome.get_modified_time())
 
-            self.runNow(now)
+            self.run_now(now)
 
-    def runNow(self, now):
+    def run_now(self, now):
         """Run using the "now" time value.
         """
         #
@@ -111,8 +111,8 @@ class Server:
         t0 = time()
         # hcron: 0=sun - 6=sat; isoweekday: 1=mon = 7=sun
         hcronWeekday = now.isoweekday() % 7
-        datemasks = dateToBitmasks(now.year, now.month, now.day, now.hour, now.minute, hcronWeekday)
+        datemasks = date_to_bitmasks(now.year, now.month, now.day, now.hour, now.minute, hcronWeekday)
         events = globals.eventListList.test(datemasks)
         if events:
-            handleEvents(events)
-        logWork(len(events), (time()-t0))
+            handle_events(events)
+        log_work(len(events), (time()-t0))
