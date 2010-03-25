@@ -263,7 +263,7 @@ class EventList:
                     path = os.path.join(root, fileName)
 
                     try:
-                        name = path[eventsHomeLen+1:]
+                        name = path[eventsHomeLen:] # keep the initial /
                         event = Event(path, name, self.userName)
                     except Exception, detail:
                         # bad Event definition
@@ -541,12 +541,13 @@ class Event:
     def resolve_include_name_to_path(self, name):
         """Resolve include name relative to the includes/ directory.
 
-        name must start with /; otherwise return None.
+        name _must_ start with /; otherwise return None.
         """
         path = None
         if name.startswith("/"):
             includes_home = get_includes_home(self.userName)
             if includes_home:
+                # strip "/" before join
                 path = os.path.join(includes_home, os.path.normpath(name)[1:])
 
         return path
@@ -558,9 +559,8 @@ class Event:
         2) relative to the current path
         """
         if not name.startswith("/"):
+            # absolutize name
             name = os.path.join("/", os.path.dirname(self.name), name)
-
-        name = os.path.normpath(name)[1:]
 
         return name
 
