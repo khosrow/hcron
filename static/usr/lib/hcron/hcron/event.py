@@ -719,22 +719,23 @@ def hcron_variable_substitution2(value, varInfo, depth=1):
                     end = hcron_variable_substitution2(end, varInfo, depth+1)
                     step = hcron_variable_substitution2(step, varInfo, depth+1)
 
+                    if step != None:
+                        step = int(step)
+                    else:
+                        step = 1
                     if start != None:
                         start = int(start)
                     if end != None:
                         end = int(end)
                     else:
                         if endColon == None:
-                            end = start+1
-                        else:
-                            end = None
-                    if step != None:
-                        step = int(step)
-                    else:
-                        if stepColon == None:
-                            step = 1
-                        else:
-                            step = None
+                            if start < 0:
+                                end = start-1
+                                step = -1
+                            else:
+                                end = start+1
+                                step = 1
+
                     ll[i] = substCombineSep.join(nameValues[start:end:step])
                     #open("/tmp/hc", "a").write("------------ ll[i] (%s)\n" % str(ll[i]))
             elif substBracket == "{":
