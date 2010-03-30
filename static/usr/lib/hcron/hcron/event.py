@@ -79,9 +79,12 @@ def handle_events(events):
     """
     childPids = {}
 
+    max_activated_events = min(globals.config.get().get("max_activated_events", CONFIG_MAX_ACTIVATED_EVENTS), 1)
+    max_chain_events = min(globals.config.get().get("max_chain_events", CONFIG_MAX_CHAIN_EVENTS), 1)
+
     for event in events:
-        while len(childPids) > 100:
-            # reap immediate children: block wait for first, clean up others without waiting
+        while len(childPids) >= max_activated_events:
+            # reap immediate children: block-wait for first, clean up others without waiting
             pid, status = os.waitpid(0, 0)
             del childPids[pid]
 
@@ -114,7 +117,7 @@ def handle_events(events):
 
                 # allow cycles up to a limit
                 #if nextEventName in eventChainNames:
-                if len(eventChainNames) > 3:
+                if len(eventChainNames) > max_chain_events:
                     break
                 else:
                     eventList = globals.eventListList.get(event.userName)

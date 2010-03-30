@@ -170,7 +170,7 @@ def copytree(src, dst, srcUid):
                 copytree(src2, dst2)
             else:
                 seteuid(srcUid)
-                x = open(src2, "r").read(HCRON_MAX_EVENT_FILE_SIZE)
+                x = open(src2, "r").read(CONFIG_MAX_EVENT_FILE_SIZE)
                 seteuid(0)
                 if len(x) < 5000:
                     open(dst2, "w+").write(x)

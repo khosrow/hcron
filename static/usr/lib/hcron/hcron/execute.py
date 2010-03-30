@@ -70,7 +70,7 @@ def remote_execute(eventName, localUserName, remoteUserName, remoteHostName, com
     localUid = pwd.getpwnam(localUserName).pw_uid
     remoteShellType = config.get("remoteShellType", REMOTE_SHELL_TYPE)
     remoteShellExec = config.get("remoteShellExec", REMOTE_SHELL_EXEC)
-    timeout = timeout or globals.config.get().get("commandSpawnTimeout", COMMAND_SPAWN_TIMEOUT)
+    timeout = timeout or globals.config.get().get("commandSpawnTimeout", CONFIG_COMMAND_SPAWN_TIMEOUT)
     command = command.strip()
 
     # validate

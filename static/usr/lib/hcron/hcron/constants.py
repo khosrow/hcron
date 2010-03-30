@@ -58,8 +58,6 @@ HCRON_SIGNAL_HOME = HCRON_SPOOL_PATH
 
 HCRON_PID_FILE_PATH = os.path.join(HCRON_VAR_PATH, "run/hcron.pid")
 
-HCRON_MAX_EVENT_FILE_SIZE = 5000
-
 HCRON_EVENT_DEFINITION_NAMES = [
     "as_user",
     "host",
@@ -80,8 +78,11 @@ HCRON_EVENT_DEFINITION_MAP = dict([ (name, "") for name in HCRON_EVENT_DEFINITIO
 REMOTE_SHELL_TYPE = "ssh"
 REMOTE_SHELL_EXEC = "/usr/bin/ssh"
 
-COMMAND_SPAWN_TIMEOUT = 15
-MAX_EVENTS_PER_USER = 25
+CONFIG_COMMAND_SPAWN_TIMEOUT = 15   # command_spawn_timeout
+CONFIG_MAX_EVENTS_PER_USER = 25     # max_events_per_user
+CONFIG_MAX_EVENT_FILE_SIZE = 5000   # max_event_file_size
+CONFIG_MAX_ACTIVATED_EVENTS = 20    # max_activated_events
+CONFIG_MAX_CHAIN_EVENTS = 5         # max_chain_events
 
 MONTH_NAMES_MAP = {
     "jan": 1,
