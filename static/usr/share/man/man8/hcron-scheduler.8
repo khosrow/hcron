@@ -71,6 +71,16 @@ Path of the log file, when use_syslog is False. A relative path is
 prepended with /var/log.
 
 .TP
+.B max_activated_events
+Maximum number of events that can be activated (spawning) at one time.
+Chained events count as 1.
+
+.TP
+.B max_chain_events
+Maximum number of chain events from a single event. The first event counts
+as 1.
+
+.TP
 .B max_events_per_user
 Maximum number of events allowed per user.
 

@@ -179,8 +179,18 @@ values are valid. [Early substitution: all attributes.]
 The host name of the host executing hcron. [Early substitution: all
 attributes.]
 
+.SS Includes
+
+.PP
+Using the "include" directive, event files may include the contents (in
+place) of files stored under the ".../includes" directory. This makes it
+easy to collect common settings in one place and "include" them rather
+than enter them in individual event files. The path given to the directive
+must begin with a / .
+
 .SS Template Event Definitions
 
+.PP
 Template event definitions are useful when an event definition can be
 sufficiently specified using variable substitutions. Typical use cases
 are when only the host field of the event definition changes and this
@@ -297,15 +307,26 @@ with an event file tree of as below, with all files exactly as above:
 .RS
 .nf
 .../
-    events/
-        cleanup/
-            machine_room/
-                mach1.xyz.com
-                mach2.xyz.com
-                mach3.xyz.com
-                mach4.xyz.com
+  events/
+    cleanup/
+      machine_room/
+        mach1.xyz.com
+        mach2.xyz.com
+        mach3.xyz.com
+        mach4.xyz.com
 .fi
 .RW
+
+.SS Using the include Directive.
+
+.RS
+.nf
+include /vars
+as_user=
+host=mymachine.xyz
+...
+.fi
+
 .SH ENVIRONMENT VARIABLES
 .TP
 EDITOR
