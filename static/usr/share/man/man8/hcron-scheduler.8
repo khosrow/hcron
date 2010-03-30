@@ -47,47 +47,47 @@ It takes the form of a simplified (simple object types) Python dictionary
 with the following keys:
 
 .TP
-.B allowLocalhost
+.B allow_localhost
 Boolean indicating whether or not event commands may be done on the
 localhost, as specified by the host setting of the event definition.
 This restriction applies to any address which resolves to the local
 host.
 
 .TP
-.B commandSpawnTimeout
+.B command_spawn_timeout
 Maximum time allowed for a command to be spawned. This does not limit
 the time allowed for a command to execute, but serves to limit spawned
 processes on the hcron machine.
 
 .TP
-.B eventsBasePath
+.B events_base_path
 Path below which to search for user event definitions, following the
-pattern <eventsBasePath>/<userName>. If undefined or None, user
-definitions are loaded from the user's home (~<userName>).
+pattern <events_base_path>/<username>. If undefined or None, user
+definitions are loaded from the user's home (~<username>).
 
 .TP
-.B logPath
-Path of the log file, when useSyslog is False. A relative path is
+.B log_path
+Path of the log file, when use_syslog is False. A relative path is
 prepended with /var/log.
 
 .TP
-.B maxEventsPerUser
+.B max_events_per_user
 Maximum number of events allowed per user.
 
 .TP
-.B namesToIgnoreRegexp
+.B names_to_ignore_regexp
 Regular expression matching event (and directory) names to ignore when
 loading events. The default is to ignore hidden files (starting with .)
 and names ending with ~ (commonly used to name backup or temporary
 files when editing).
 
 .TP
-.B smtpServer
+.B smtp_server
 Host name of an SMTP server willing to accept connections. If not
 specified, localhost is used.
 
 .TP
-.B useSyslog
+.B use_syslog
 Boolean indicating whether or not to send the logging information to
 the syslog daemon.
 
@@ -110,14 +110,14 @@ A default hcron.conf configuration:
 .nf
 # hcron.conf
 {
-    "allowLocalhost": False,
-    "commandSpawnTimeout": 15,
-    "eventsBasePath": None,
-    "logPath": "hcron.log",
-    "maxEventsPerUser": 25,
-    "namesToIgnoreRegexp": "(\..*)|(.*~$)",
-    "smtpServer": "localhost",
-    "useSyslog": False,
+    "allow_localhost": False,
+    "command_spawn_timeout": 15,
+    "events_base_path": None,
+    "log_path": "hcron.log",
+    "max_events_per_user": 25,
+    "names_to_ignore_regexp": "(\..*)|(.*~$)",
+    "smtp_server": "localhost",
+    "use_syslog": False,
 }
 .fi
 .RE
@@ -143,11 +143,11 @@ See HCRON.ALLOW above.
 .IP /etc/hcron/hcron.conf
 See HCRON.CONF above.
 
-.IP /var/lib/hcron/event_lists/<userName>
+.IP /var/lib/hcron/event_lists/<username>
 Lists the current event lists of the associated user according to the format (see hcron-reload).
 
 .IP /var/log/hcron.log
-Default location of the log file (when useSyslog is False).
+Default location of the log file (when use_syslog is False).
 
 .IP /var/run/hcron.pid
 Pid file for the currently running hcron-scheduler. This is managed by

@@ -66,28 +66,28 @@ def remote_execute(eventName, localUserName, remoteUserName, remoteHostName, com
 
     # setup
     config = globals.config.get()
-    allowLocalhost = config.get("allowLocalhost", False) 
+    allow_localhost = config.get("allow_localhost", CONFIG_ALLOW_LOCALHOST) 
     localUid = pwd.getpwnam(localUserName).pw_uid
-    remoteShellType = config.get("remoteShellType", REMOTE_SHELL_TYPE)
-    remoteShellExec = config.get("remoteShellExec", REMOTE_SHELL_EXEC)
-    timeout = timeout or globals.config.get().get("commandSpawnTimeout", CONFIG_COMMAND_SPAWN_TIMEOUT)
+    remote_shell_type = config.get("remote_shell_type", CONFIG_REMOTE_SHELL_TYPE)
+    remote_shell_exec = config.get("remote_shell_exec", CONFIG_REMOTE_SHELL_EXEC)
+    timeout = timeout or globals.config.get().get("command_spawn_timeout", CONFIG_COMMAND_SPAWN_TIMEOUT)
     command = command.strip()
 
     # validate
-    if remoteHostName in LOCAL_HOST_NAMES and not allowLocalhost:
+    if remoteHostName in LOCAL_HOST_NAMES and not allow_localhost:
         raise RemoteExecuteException("Execution on local host is not allowed.")
 
     if localUid == 0:
         raise RemoteExecuteException("Root user not allowed to execute.")
 
-    if remoteShellType != "ssh":
-        raise RemoteExecuteException("Unknown remote shell type (%s)." % remoteShellType)
+    if remote_shell_type != "ssh":
+        raise RemoteExecuteException("Unknown remote shell type (%s)." % remote_shell_type)
 
     # spawn
     retVal = -1
     if command != "":
         try:
-            args = [ remoteShellExec, "-f", "-t", "-l", remoteUserName, remoteHostName, command ]
+            args = [ remote_shell_exec, "-f", "-t", "-l", remoteUserName, remoteHostName, command ]
             childPid = os.fork()
 
             if childPid == 0:

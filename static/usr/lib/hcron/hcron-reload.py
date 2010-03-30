@@ -44,12 +44,12 @@ def make_events_snapshot():
     directories as required.
     """
     globals.config = ConfigFile(HCRON_CONFIG_PATH)
-    eventsBasePath = globals.config.get("eventsBasePath", "").strip()
+    events_base_path = globals.config.get("events_base_path", "").strip()
 
-    if eventsBasePath == "":
+    if events_base_path == "":
         src = os.path.expanduser("~%s/.hcron/%s/events" % (USER_NAME, HOST_NAME))
     else:
-        src = os.path.join(eventsBasePath, USER_NAME, ".hcron/%s/events" % HOST_NAME)
+        src = os.path.join(events_base_path, USER_NAME, ".hcron/%s/events" % HOST_NAME)
 
     dst = get_events_home(USER_NAME)
 

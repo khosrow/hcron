@@ -1,12 +1,12 @@
 # hcron.conf
 {
-    "allowLocalhost": False,
-    "commandSpawnTimeout": 15,
-    "eventsBasePath": None,
-    "logPath": "hcron.log",
-    "maxEventsPerUser": 25,
+    "allow_localhost": False,
+    "command_spawn_timeout": 15,
+    "events_base_path": None,
+    "log_path": "hcron.log",
+    "max_events_per_user": 25,
     # hidden files, emacs backup files
-    "namesToIgnoreRegexp": "(\..*)|(.*~$)",
-    "smtpServer": "localhost",
-    "useSyslog": False,
+    "names_to_ignore_regexp": "(\..*)|(.*~$)",
+    "smtp_server": "localhost",
+    "use_syslog": False,
 }

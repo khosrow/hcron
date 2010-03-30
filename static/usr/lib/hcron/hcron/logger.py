@@ -39,13 +39,13 @@ def setup_logger():
     global logger
 
     config = globals.config.get()
-    if config.get("useSyslog", False):
+    if config.get("use_syslog", CONFIG_USE_SYSLOG):
         handler = logging.SysLogHandler()
     else:
-        logPath = config.get("logPath", HCRON_LOG_PATH)
-        if not logPath.startswith("/"):
-            logPath = os.path.join(HCRON_LOG_HOME, logPath)
-        handler = logging.FileHandler(logPath)
+        log_path = config.get("log_path", CONFIG_LOG_PATH)
+        if not log_path.startswith("/"):
+            log_path = os.path.join(HCRON_LOG_HOME, log_path)
+        handler = logging.FileHandler(log_path)
     logger = logging.getLogger("")
     logger.addHandler(handler)
     logger.setLevel(logging.INFO)

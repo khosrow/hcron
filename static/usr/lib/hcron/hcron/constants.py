@@ -51,7 +51,7 @@ HCRON_EVENT_LISTS_DUMP_DIR = os.path.join(HCRON_LIB_HOME, "event_lists")
 HCRON_EVENTS_SNAPSHOT_HOME = os.path.join(HCRON_LIB_HOME, "events")
 # var/log
 HCRON_LOG_HOME = os.path.join(HCRON_VAR_PATH, "log/hcron")
-HCRON_LOG_PATH = os.path.join(HCRON_LOG_HOME, "hcron.log")
+CONFIG_LOG_PATH = os.path.join(HCRON_LOG_HOME, "hcron.log")
 # var/spool
 HCRON_SPOOL_PATH = os.path.join(HCRON_VAR_PATH, "spool/hcron")
 HCRON_SIGNAL_HOME = HCRON_SPOOL_PATH
@@ -75,14 +75,15 @@ HCRON_EVENT_DEFINITION_NAMES = [
 HCRON_EVENT_DEFINITION = "\n".join([ "%s=" % name for name in HCRON_EVENT_DEFINITION_NAMES ])
 HCRON_EVENT_DEFINITION_MAP = dict([ (name, "") for name in HCRON_EVENT_DEFINITION_NAMES ])
 
-REMOTE_SHELL_TYPE = "ssh"
-REMOTE_SHELL_EXEC = "/usr/bin/ssh"
-
+CONFIG_REMOTE_SHELL_TYPE = "ssh"
+CONFIG_REMOTE_SHELL_EXEC = "/usr/bin/ssh"
 CONFIG_COMMAND_SPAWN_TIMEOUT = 15   # command_spawn_timeout
 CONFIG_MAX_EVENTS_PER_USER = 25     # max_events_per_user
 CONFIG_MAX_EVENT_FILE_SIZE = 5000   # max_event_file_size
 CONFIG_MAX_ACTIVATED_EVENTS = 20    # max_activated_events
 CONFIG_MAX_CHAIN_EVENTS = 5         # max_chain_events
+CONFIG_ALLOW_LOCALHOST = False      # allow_localhost
+CONFIG_USE_SYSLOG = False           # use_syslog
 
 MONTH_NAMES_MAP = {
     "jan": 1,

@@ -258,9 +258,9 @@ class EventList:
             os.seteuid(pwd.getpwnam(self.userName).pw_uid)
 
             eventsHomeLen = len(eventsHome)
-            maxEventsPerUser = globals.config.get().get("maxEventsPerUser", MAX_EVENTS_PER_USER)
-            namesToIgnoreCregexp = globals.config.get().get("namesToIgnoreCregexp")
-            ignoreMatchFn = namesToIgnoreCregexp and namesToIgnoreCregexp.match
+            max_events_per_user = globals.config.get().get("max_events_per_user", CONFIG_MAX_EVENTS_PER_USER)
+            names_to_ignore_cregexp = globals.config.get().get("names_to_ignore_cregexp")
+            ignoreMatchFn = names_to_ignore_cregexp and names_to_ignore_cregexp.match
 
             for root, dirNames, fileNames in dir_walk(eventsHome, ignoreMatchFn=ignoreMatchFn):
                 for fileName in fileNames:
@@ -276,9 +276,9 @@ class EventList:
 
                     self.events[name] = event
 
-                    if len(self.events) >= maxEventsPerUser:
+                    if len(self.events) >= max_events_per_user:
                         event.reason = "maximum events reached"
-                        log_message("warning", "Reached maximum events allowed (%s)." % maxEventsPerUser)
+                        log_message("warning", "Reached maximum events allowed (%s)." % max_events_per_user)
 
         except Exception, detail:
             log_message("error", "Could not load events.")

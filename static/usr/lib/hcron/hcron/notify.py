@@ -34,13 +34,13 @@ from hcron.logger import *
 
 def send_email_notification(eventName, fromUserName, toAddr, subject, content):
     config = globals.config.get()
-    smtpServer = config.get("smtpServer", "localhost")
+    smtp_server = config.get("smtp_server", "localhost")
 
     fromAddr = "%s@%s" % (fromUserName, HOST_NAME)
     message = """From: %s\r\nTo: %s\r\nSubject: %s\r\n\r\n%s""" % \
         (fromAddr, toAddr, subject, content)
     try:
-        m = smtplib.SMTP(smtpServer)
+        m = smtplib.SMTP(smtp_server)
         m.sendmail(fromAddr, toAddr, message)
         m.quit()
         log_notify_email(fromUserName, toAddr, eventName)

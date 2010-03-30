@@ -181,12 +181,12 @@ def get_events_home(userName):
     """Returns the user-specific events/ directory path.
     """
     config = globals.config.get()
-    eventsBasePath = (config.get("eventsBasePath") or "").strip()
+    events_base_path = (config.get("events_base_path") or "").strip()
 
-    if eventsBasePath == "":
+    if events_base_path == "":
         path = os.path.expanduser("~%s/.hcron/%s/events" % (userName, HOST_NAME))
     else:
-        path = os.path.join(eventsBasePath, userName, ".hcron/%s/events" % HOST_NAME)
+        path = os.path.join(events_base_path, userName, ".hcron/%s/events" % HOST_NAME)
 
     if path.startswith("~"):
         return None
@@ -197,12 +197,12 @@ def get_includes_home(userName):
     """Returns the user-specific includes/ directory path.
     """
     config = globals.config.get()
-    eventsBasePath = (config.get("eventsBasePath") or "").strip()
+    events_base_path = (config.get("events_base_path") or "").strip()
 
-    if eventsBasePath == "":
+    if events_base_path == "":
         path = os.path.expanduser("~%s/.hcron/%s/includes" % (userName, HOST_NAME))
     else:
-        path = os.path.join(eventsBasePath, userName, ".hcron/%s/includes" % HOST_NAME)
+        path = os.path.join(events_base_path, userName, ".hcron/%s/includes" % HOST_NAME)
 
     if path.startswith("~"):
         return None

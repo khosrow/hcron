@@ -73,9 +73,9 @@ class ConfigFile(TrackableFile):
             sys.exit(-1)
 
         # augment
-        if "namesToIgnoreRegexp" in d:
+        if "names_to_ignore_regexp" in d:
             try:
-                d["namesToIgnoreCregexp"] = re.compile(d["namesToIgnoreRegexp"])
+                d["names_to_ignore_cregexp"] = re.compile(d["names_to_ignore_regexp"])
             except:
                 pass
 
