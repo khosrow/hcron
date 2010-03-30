@@ -142,7 +142,8 @@ The when_* fields allow for a wilcard (*) and command-separated lists.
 A chain of events can be set up by setting the next_event and/or
 failover_event settings. The $HCRON_EVENT_CHAIN variable (see below)
 can be used to provide information about the point in the chain at
-which the event is executing. Cycles are caught and prevented.
+which the event is executing. The maximum number of chained events
+can be configured.
 
 The next_event and failover_event names are relative to the executing
 event or relative to "~/.hcron/<fqHostName>/events" if the name begins
