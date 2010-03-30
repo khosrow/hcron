@@ -695,7 +695,7 @@ def hcron_variable_substitution2(value, varInfo, depth=1):
                 substCombineSep = hcron_variable_substitution2(substCombineSep, varInfo, depth+1)
 
             if substSplitSep == "":
-                nameValues = list(nameValues)
+                nameValues = list(nameValue)
             else:
                 nameValues = nameValue.split(substSplitSep)
 
