@@ -88,10 +88,11 @@ def handle_events(events):
             pid, status = os.waitpid(0, 0)
             del childPids[pid]
 
-            pid, status = os.waitpid(0, os.WNOHANG)
-            while pid != 0:
-                del childPids[pid]
+            if len(childPids):
                 pid, status = os.waitpid(0, os.WNOHANG)
+                while pid != 0:
+                    del childPids[pid]
+                    pid, status = os.waitpid(0, os.WNOHANG)
 
         pid = os.fork()
         childPids[pid] = None
