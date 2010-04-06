@@ -634,7 +634,7 @@ def search_name_select(st, lastPos):
 #SUBST_NAME_SELECT_RE = "(?P<op>[#$])(?P<name>HCRON_\w*)(((?P<square_bracket>\[)(?P<square_select>.*)\])|((?P<curly_bracket>\{)(?P<curly_select>.*)\}))?"
 SUBST_NAME_SELECT_RE = "(?P<op>[#$])(?P<name>\w+)(((?P<square_bracket>\[)(?P<square_select>.*)\])|((?P<curly_bracket>\{)(?P<curly_select>.*)\}))?"
 #SUBST_SEP_LIST_RE = "(?:(?P<sep>.*)!)?(?P<list>.*)"
-SUBST_SEP_RE = "(?P<split_sep>[^?!]*)((?:\?)(?P<combine_sep>[^!]*))?!"
+SUBST_SEP_RE = "(?P<split_sep>[^?!]*)((?:\?)(?P<join_sep>[^!]*))?!"
 SUBST_SEP_LIST_RE = "(?:(%s))?(?P<list>.*)" % SUBST_SEP_RE
 SUBST_LIST_RE = "(.*)(?:,(.*))?"
 SUBST_SLICE_RE = "(-?\d*)(:(-?\d*))?(:(-?\d*))?"
@@ -708,7 +708,7 @@ def hcron_variable_substitution2(value, varInfo, depth=1):
         else:
             sid = SUBST_SEP_LIST_CRE.match(substSelect).groupdict()
             substSplitSep = sid.get("split_sep")
-            substCombineSep = sid.get("combine_sep")
+            substJoinSep = sid.get("join_sep")
             if substSplitSep == None:
                 # special case!
                 substSplitSep = substName == "HCRON_EVENT_NAME" and "/" or ":"
@@ -716,10 +716,10 @@ def hcron_variable_substitution2(value, varInfo, depth=1):
                 pass
             else:
                 substSplitSep = hcron_variable_substitution2(substSplitSep, varInfo, depth+1)
-            if substCombineSep == None:
-                substCombineSep = substSplitSep
+            if substJoinSep == None:
+                substJoinSep = substSplitSep
             else:
-                substCombineSep = hcron_variable_substitution2(substCombineSep, varInfo, depth+1)
+                substJoinSep = hcron_variable_substitution2(substJoinSep, varInfo, depth+1)
 
             if substSplitSep == "":
                 nameValues = list(nameValue)
@@ -763,7 +763,7 @@ def hcron_variable_substitution2(value, varInfo, depth=1):
                                 end = start+1
                                 step = 1
 
-                    ll[i] = substCombineSep.join(nameValues[start:end:step])
+                    ll[i] = substJoinSep.join(nameValues[start:end:step])
                     #open("/tmp/hc", "a").write("------------ ll[i] (%s)\n" % str(ll[i]))
             elif substBracket == "{":
                 # matching: substitute, match, flatten
@@ -772,7 +772,7 @@ def hcron_variable_substitution2(value, varInfo, depth=1):
                 ll = [ el for x in ll for el in fnmatch.filter(nameValues, x) ]
                 #open("/tmp/hc", "a").write("------ ll (%s)\n" % str(ll))
 
-            value = substCombineSep.join(ll)
+            value = substJoinSep.join(ll)
 
         if op == "#" and nameValue != None:
             #open("/tmp/hc", "a").write("*** name (%s) nameValue (%s) sep (%s) value (%s) count (%s)\n" % (substName, nameValue, substSplitSep, value, value.count(substSplitSep)+1))
