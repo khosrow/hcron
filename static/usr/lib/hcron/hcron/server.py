@@ -60,6 +60,7 @@ class Server:
         """
         minuteDelta = timedelta(minutes=1)
         now = datetime.now()
+        next = now # special case
 
         if immediate:
             # special case: run with the current "now" time instead of
@@ -68,22 +69,30 @@ class Server:
 
         while True:
             #
-            # prep for next interval
+            # prep for next interval; increment by 1 minute relative
+            # to previous minute (not now() which may have passed 1
+            # minute to get work done!)
             #
-            next = now+minuteDelta
-            next = next.replace(second=0)
-            oldNow = now
+            next = (next+minuteDelta).replace(second=0, microsecond=0)
             now = datetime.now()
-            delta = (next-now).seconds+2
+            if next > now:
+                # we need to wait
+                delta = (next-now).seconds+1
+            else:
+                # we're behind, run immediately
+                log_message("info", "behind schedule (%s), sheduling immediately" % (next-now))
+                delta = 0
     
             log_sleep(delta)
             sleep(delta)
             now = datetime.now()
+            log_message("info", "scheduling for next interval (%s)" % next)
 
             #
             # check and update as necessary
             #
             if globals.config.is_modified():
+                ### this is a problem if we are behind schedule!!!
                 log_message("info", "hcron.conf was modified")
                 # restart
                 globals.pidFile.remove()
@@ -100,7 +109,7 @@ class Server:
                 globals.signalHome.load()
                 reload_events(globals.signalHome.get_modified_time())
 
-            self.run_now(now)
+            self.run_now(next)
 
     def run_now(self, now):
         """Run using the "now" time value.
