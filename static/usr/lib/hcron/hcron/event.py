@@ -545,7 +545,11 @@ class Event:
             # success
             # notify
             if event_notify_email:
-                subject = """hcron: "%s" executed at %s@%s""" % (self.name, event_as_user, event_host)
+                if event_notify_subject == "":
+                    subject = """hcron: "%s" executed at %s@%s""" % (self.name, event_as_user, event_host)
+                else:
+                    subject = event_notify_subject
+                subject = subject[:1024]
                 send_email_notification(self.name, self.userName, event_notify_email, subject, event_notify_message)
     
             nextEventName = event_next_event
