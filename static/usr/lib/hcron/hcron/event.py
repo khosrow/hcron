@@ -62,7 +62,7 @@ def signal_reload():
     except:
         raise Exception("Error: Could not signal for reload.")
 
-def handle_events(events):
+def handle_events(events, sched_datetime):
     """Handle all events given and chain events as specified in the
     events being handled.
 
@@ -106,7 +106,7 @@ def handle_events(events):
 
                 #log_message("info", "Processing event (%s)." % event.get_name())
                 try:
-                    nextEventName = event.activate(eventChainNames)
+                    nextEventName = event.activate(eventChainNames, sched_datetime=sched_datetime)
                 except Exception, detail:
                     log_message("error", "handle_events (%s)" % detail)
                     nextEventName = None
@@ -350,20 +350,26 @@ class Event:
     def get_path(self):
         return self.path
 
-    def get_var_info(self, eventChainNames=None):
-        dt_utc = datetime.utcnow()
-        dt_local = datetime.now()
+    def get_var_info(self, eventChainNames=None, sched_datetime=None):
+        """Set variable values.
 
+        Early substitution: at event load time.
+        Late substitution: at event activate time.
+
+        eventChainNames != None means late since every event activate
+        has at least itself in the eventChainNames.
+        """
+
+        # early and late
         varInfo = {
             "when_year": "*",
             "template_name": None,
-            "HCRON_DATETIME": datetime.strftime(dt_local, "%Y:%m:%d:%H:%M:%S:%W:%w"),
-            "HCRON_DATETIME_UTC": datetime.strftime(dt_utc, "%Y:%m:%d:%H:%M:%S:%W:%w"),
             "HCRON_HOST_NAME": socket.getfqdn(),
             "HCRON_EVENT_NAME": self.name,
         }
         
         if eventChainNames:
+            # late
             selfEventChainNames = []
             lastEventChainName = eventChainNames[-1]
             for eventChainName in reversed(eventChainNames):
@@ -372,6 +378,15 @@ class Event:
                 selfEventChainNames.append(eventChainName)
             varInfo["HCRON_EVENT_CHAIN"] = ":".join(eventChainNames)
             varInfo["HCRON_SELF_CHAIN"] = ":".join(selfEventChainNames)
+
+            dt_utc = datetime.utcnow()
+            dt_local = datetime.now()
+            varInfo["HCRON_ACTIVATE_DATETIME"] = datetime.strftime(dt_local, "%Y:%m:%d:%H:%M:%S:%W:%w")
+            varInfo["HCRON_ACTIVATE_DATETIME_UTC"] = datetime.strftime(dt_utc, "%Y:%m:%d:%H:%M:%S:%W:%w")
+
+            if sched_datetime:
+                varInfo["HCRON_SCHEDULE_DATETIME"] = sched_datetime.strftime("%Y:%m:%d:%H:%M:%S:%W:%w")
+                varInfo["HCRON_SCHEDULE_DATETIME_UTC"] = sched_datetime.strftime("%Y:%m:%d:%H:%M:%S:%W:%w")
         else:
             varInfo["HCRON_EVENT_CHAIN"] = ""
             varInfo["HCRON_SELF_CHAIN"] = ""
@@ -498,10 +513,10 @@ class Event:
 
         return 1
 
-    def activate(self, eventChainNames=None):
+    def activate(self, eventChainNames=None, sched_datetime=None):
         """Activate event and return next event in chain.
         """
-        varInfo = self.get_var_info(eventChainNames)
+        varInfo = self.get_var_info(eventChainNames, sched_datetime)
 
         # late substitution
         eval_assignments(self.assignments, varInfo)

@@ -114,5 +114,5 @@ class Server:
         datemasks = date_to_bitmasks(now.year, now.month, now.day, now.hour, now.minute, hcronWeekday)
         events = globals.eventListList.test(datemasks)
         if events:
-            handle_events(events)
+            handle_events(events, sched_datetime=now)
         log_work(len(events), (time()-t0))
