@@ -591,7 +591,8 @@ class Event:
 
 import re
 
-SUBST_NAME_RE = "(?P<op>[#$])(?P<name>HCRON_\w*)"
+#SUBST_NAME_RE = "(?P<op>[#$])(?P<name>HCRON_\w*)"
+SUBST_NAME_RE = "(?P<op>[#$])(?P<name>\w+)"
 SUBST_NAME_CRE = re.compile(SUBST_NAME_RE)
 def search_name_select(st, lastPos):
     """Find startPos and endPos for:
@@ -630,7 +631,8 @@ def search_name_select(st, lastPos):
 
     return startPos, endPos
         
-SUBST_NAME_SELECT_RE = "(?P<op>[#$])(?P<name>HCRON_\w*)(((?P<square_bracket>\[)(?P<square_select>.*)\])|((?P<curly_bracket>\{)(?P<curly_select>.*)\}))?"
+#SUBST_NAME_SELECT_RE = "(?P<op>[#$])(?P<name>HCRON_\w*)(((?P<square_bracket>\[)(?P<square_select>.*)\])|((?P<curly_bracket>\{)(?P<curly_select>.*)\}))?"
+SUBST_NAME_SELECT_RE = "(?P<op>[#$])(?P<name>\w+)(((?P<square_bracket>\[)(?P<square_select>.*)\])|((?P<curly_bracket>\{)(?P<curly_select>.*)\}))?"
 #SUBST_SEP_LIST_RE = "(?:(?P<sep>.*)!)?(?P<list>.*)"
 SUBST_SEP_RE = "(?P<split_sep>[^?!]*)((?:\?)(?P<combine_sep>[^!]*))?!"
 SUBST_SEP_LIST_RE = "(?:(%s))?(?P<list>.*)" % SUBST_SEP_RE
