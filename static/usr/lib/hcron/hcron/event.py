@@ -531,6 +531,7 @@ class Event:
         event_notify_email = varInfo.get("notify_email")
         event_notify_subject = varInfo.get("notify_subject", "").strip()
         event_notify_message = varInfo.get("notify_message", "")
+        event_notify_message = event_notify_message.replace("\\n", "\n").replace("\\t", "\t")
         event_next_event = varInfo.get("next_event", "")
         event_failover_event = varInfo.get("failover_event", "")
 
