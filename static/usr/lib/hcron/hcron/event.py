@@ -125,6 +125,13 @@ def handle_events(events, sched_datetime):
                     nextEvent = eventList and eventList.get(nextEventName)
                     event = nextEvent
 
+                    # cases for which event should not be activated
+                    if event == None:
+                        log_message("error", "Event (%s) does not exist." % nextEventName)
+                    elif event.reason not in [ None, "template" ]:
+                        log_message("error", "Event was rejected (%s)." % event.reason)
+                        event = None
+
             os._exit(0)
 
         else:
@@ -456,7 +463,7 @@ class Event:
                 self.reason = "bad variable substitution"
                 raise BadVariableSubstitutionException("Ignored event file (%s)." % self.path)
 
-            # template check
+            # template check (this should preced when_* checks)
             if varInfo["template_name"] == self.name.split("/")[-1]:
                 self.reason = "template"
                 raise TemplateEventDefinitionException("Ignored event file (%s). Template name (%s)." % (self.path, varInfo["template_name"]))
