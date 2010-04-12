@@ -22,6 +22,7 @@
 # GPL--end
 
 # system imports
+import datetime
 import os
 import os.path
 import subprocess
@@ -95,7 +96,8 @@ if __name__ == "__main__":
         try:
             if reload == True or raw_input("Reload events (y/n)? ") in [ "y" ]:
                 signal_reload()
-                print "Reload signalled for this machine (%s)." % HOST_NAME
+                next_interval = (datetime.datetime.now()+datetime.timedelta(seconds=60)).replace(second=0,microsecond=0)
+                print "Reload signalled for machine (%s) at next interval (%s)." % (HOST_NAME, next_interval)
             else:
                 print "Reload deferred."
     

@@ -26,11 +26,12 @@ definition files.
 """
 
 # system imports
-import os.path
-import sys
+import datetime
 import os
+import os.path
 import pwd
 import shutil
+import sys
 
 # app imports
 from hcron.constants import *
@@ -95,7 +96,8 @@ if __name__ == "__main__":
 
     try:
         signal_reload()
-        print "Reload signalled for this machine (%s)." % HOST_NAME
+        next_interval = (datetime.datetime.now()+datetime.timedelta(seconds=60)).replace(second=0,microsecond=0)
+        print "Reload signalled for machine (%s) at next interval (%s)." % (HOST_NAME, next_interval)
     except Exception, detail:
         #print detail
         sys.exit(-1)
