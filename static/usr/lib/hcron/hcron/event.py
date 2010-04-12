@@ -125,14 +125,15 @@ def handle_events(events, sched_datetime):
                 else:
                     eventList = globals.eventListList.get(event.userName)
                     nextEvent = eventList and eventList.get(nextEventName)
-                    event = nextEvent
 
-                    # cases for which event should not be activated
-                    if event == None:
-                        log_message("error", "Chained event (%s) does not exist." % nextEventName)
-                    elif event.reason not in [ None, "template" ]:
-                        log_message("error", "Chained event (%s) was rejected (%s)." % (nextEventName, event.reason))
-                        event = None
+                    # problem cases for nextEvent
+                    if nextEvent == None:
+                        log_message("error", "Chained event (%s) does not exist." % nextEventName, user_name=event.userName)
+                    elif nextEvent.reason not in [ None, "template" ]:
+                        log_message("error", "Chained event (%s) was rejected (%s)." % (nextEventName, nextEvent.reason), user_name=event.userName)
+                        nextEvent = None
+
+                    event = nextEvent
 
             os._exit(0)
 
