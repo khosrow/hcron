@@ -96,8 +96,9 @@ if __name__ == "__main__":
         try:
             if reload == True or raw_input("Reload events (y/n)? ") in [ "y" ]:
                 signal_reload()
-                next_interval = (datetime.datetime.now()+datetime.timedelta(seconds=60)).replace(second=0,microsecond=0)
-                print "Reload signalled for machine (%s) at next interval (%s)." % (HOST_NAME, next_interval)
+                now = datetime.datetime.now()
+                next_interval = (now+datetime.timedelta(seconds=60)).replace(second=0,microsecond=0)
+                print "Reload signalled for machine (%s) at next interval (%s; in %ss)." % (HOST_NAME, next_interval, (next_interval-now).seconds)
             else:
                 print "Reload deferred."
     
