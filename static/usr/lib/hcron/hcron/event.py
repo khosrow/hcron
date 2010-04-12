@@ -106,6 +106,7 @@ def handle_events(events, sched_datetime):
 
                 #log_message("info", "Processing event (%s)." % event.get_name())
                 try:
+                    # None, next_event, or failover_event is returned
                     nextEventName = event.activate(eventChainNames, sched_datetime=sched_datetime)
                 except Exception, detail:
                     log_message("error", "handle_events (%s)" % detail)
@@ -127,9 +128,9 @@ def handle_events(events, sched_datetime):
 
                     # cases for which event should not be activated
                     if event == None:
-                        log_message("error", "Event (%s) does not exist." % nextEventName)
+                        log_message("error", "Chained event (%s) does not exist." % nextEventName)
                     elif event.reason not in [ None, "template" ]:
-                        log_message("error", "Event was rejected (%s)." % event.reason)
+                        log_message("error", "Chained event (%s) was rejected (%s)." % (nextEventName, event.reason))
                         event = None
 
             os._exit(0)
