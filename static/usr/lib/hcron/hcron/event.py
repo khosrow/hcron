@@ -79,8 +79,8 @@ def handle_events(events, sched_datetime):
     """
     childPids = {}
 
-    max_activated_events = min(globals.config.get().get("max_activated_events", CONFIG_MAX_ACTIVATED_EVENTS), 1)
-    max_chain_events = min(globals.config.get().get("max_chain_events", CONFIG_MAX_CHAIN_EVENTS), 1)
+    max_activated_events = max(globals.config.get().get("max_activated_events", CONFIG_MAX_ACTIVATED_EVENTS), 1)
+    max_chain_events = max(globals.config.get().get("max_chain_events", CONFIG_MAX_CHAIN_EVENTS), 1)
 
     for event in events:
         while len(childPids) >= max_activated_events:
@@ -119,7 +119,8 @@ def handle_events(events, sched_datetime):
 
                 # allow cycles up to a limit
                 #if nextEventName in eventChainNames:
-                if len(eventChainNames) > max_chain_events:
+                if len(eventChainNames) >= max_chain_events:
+                    log_message("error", "Event chain limit (%s) reached at (%s)." % (max_chain_events, nextEventName), user_name=event.userName)
                     break
                 else:
                     eventList = globals.eventListList.get(event.userName)
