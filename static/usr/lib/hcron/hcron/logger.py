@@ -71,8 +71,8 @@ def log_any2(op, userName="", *args):
         extra = ""
     logger.info("%s:%s:%s:%s" % (get_datestamp(), op, userName, extra))
 
-def log_message(typ, msg):
-    log_any("message", "", typ, msg)
+def log_message(typ, msg, user_name=""):
+    log_any("message", user_name, typ, msg)
 
 def log_start():
     log_any("start")
