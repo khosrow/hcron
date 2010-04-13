@@ -407,12 +407,25 @@ class Event:
         return varInfo
 
     def load_file(self, path):
+        """Load file according to the following:
+        - non-continuation lines, left-stripped, starting with # are
+          discarded
+        - lines ending in \ are concatenated, unconditionally, with
+          the next line resulting in a replacement line
+        - lines stripped to "" are discarded
+        """
         l = []
 
-        st = open(path, "r").read()
-        for line in st.split("\n"):
+        lines = open(path, "r").read().split("\n")
+        while lines:
+            line = lines.pop(0)
+            if line.lstrip().startswith("#"):
+                continue
+            while lines and line.endswith("\\"):
+                line = line[:-1]+lines.pop(0)
+
             line = line.strip()
-            if line.startswith("#") or line == "":
+            if line == "":
                 continue
             l.append(line)
 
