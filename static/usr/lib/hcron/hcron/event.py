@@ -129,7 +129,7 @@ def handle_events(events, sched_datetime):
                     # problem cases for nextEvent
                     if nextEvent == None:
                         log_message("error", "Chained event (%s) does not exist." % nextEventName, user_name=event.userName)
-                    elif nextEvent.reason not in [ None, "template" ]:
+                    elif nextEvent.assignments == None and nextEvent.reason not in [ None, "template" ]:
                         log_message("error", "Chained event (%s) was rejected (%s)." % (nextEventName, nextEvent.reason), user_name=event.userName)
                         nextEvent = None
 
@@ -352,6 +352,9 @@ class Event:
         self.userName = userName
         self.name = name
         self.reason = None
+        self.assignments = None
+        self.when = None
+
         self.load()
 
     def get_name(self):
@@ -466,6 +469,13 @@ class Event:
                 self.reason = "bad variable substitution"
                 raise BadVariableSubstitutionException("Ignored event file (%s)." % self.path)
 
+            # for backward compatibility: rejected events may have
+            # invalid when_* settings but assignments otherwise; useful
+            # for non-scheduled events in event chains
+            #
+            # *** keep until alternate solution ***
+            self.assignments = assignments
+
             # template check (this should preced when_* checks)
             if varInfo["template_name"] == self.name.split("/")[-1]:
                 self.reason = "template"
@@ -481,6 +491,8 @@ class Event:
                 self.reason = "bad when_* setting"
                 raise BadEventDefinitionException("Ignored event file (%s)." % self.path)
 
+            self.masks = masks
+
             # full specification check
             for name in HCRON_EVENT_DEFINITION_NAMES:
                 if name not in varInfo:
@@ -495,9 +507,6 @@ class Event:
                     varInfo.get("when_hour"),
                     varInfo.get("when_minute"),
                     varInfo.get("when_dow"))
-
-            self.assignments = assignments
-            self.masks = masks
 
         except:
             if self.reason == None:
