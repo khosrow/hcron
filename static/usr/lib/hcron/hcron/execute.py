@@ -78,7 +78,7 @@ def remote_execute(eventName, localUserName, remoteUserName, remoteHostName, com
         raise RemoteExecuteException("Execution on local host is not allowed.")
 
     if remoteHostName == "":
-        raise RemoteExecuteException("Missing host name.")
+        raise RemoteExecuteException("Missing host name for event (%s)." % eventName)
 
     if localUid == 0:
         raise RemoteExecuteException("Root user not allowed to execute.")

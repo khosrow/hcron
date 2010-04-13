@@ -109,7 +109,7 @@ def handle_events(events, sched_datetime):
                     # None, next_event, or failover_event is returned
                     nextEventName = event.activate(eventChainNames, sched_datetime=sched_datetime)
                 except Exception, detail:
-                    log_message("error", "handle_events (%s)" % detail)
+                    log_message("error", "handle_events (%s)" % detail, user_name=event.userName)
                     nextEventName = None
     
                 if nextEventName == None:
