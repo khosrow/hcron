@@ -568,10 +568,12 @@ class Event:
         event_failover_event = varInfo.get("failover_event", "")
 
         # execute (host required)
-        if event_host == "":
-            retVal = 0
-        else:
-            retVal = remote_execute(self.name, self.userName, event_as_user, event_host, event_command)
+        #if event_host == "":
+            #retVal = 0
+            #retVal = -1
+        #else:
+            #retVal = remote_execute(self.name, self.userName, event_as_user, event_host, event_command)
+        retVal = remote_execute(self.name, self.userName, event_as_user, event_host, event_command)
 
         if retVal == 0:
             # success
