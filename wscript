@@ -15,7 +15,7 @@ def configure(conf):
 
     conf.env._PACKAGE_FORMAT = Options.options.package_format
     conf.env._PACKAGE_PLATFORM = Options.options.package_platform
-    conf.env._PACKAGE_VERSION = "0.14"
+    conf.env._PACKAGE_VERSION = "0.15"
 
     wscript_lib.configure(conf)
 
