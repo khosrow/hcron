@@ -52,8 +52,8 @@ HCRON_EVENTS_SNAPSHOT_HOME = os.path.join(HCRON_LIB_HOME, "events")
 # var/log
 HCRON_LOG_HOME = os.path.join(HCRON_VAR_PATH, "log/hcron")
 # var/spool
-HCRON_SPOOL_PATH = os.path.join(HCRON_VAR_PATH, "spool/hcron")
-HCRON_SIGNAL_HOME = HCRON_SPOOL_PATH
+HCRON_SPOOL_HOME = os.path.join(HCRON_VAR_PATH, "spool/hcron")
+HCRON_SIGNAL_HOME = HCRON_SPOOL_HOME
 
 HCRON_PID_FILE_PATH = os.path.join(HCRON_VAR_PATH, "run/hcron.pid")
 
