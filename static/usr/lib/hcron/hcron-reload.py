@@ -37,29 +37,7 @@ import sys
 from hcron.constants import *
 from hcron.event import signal_reload
 from hcron.file import ConfigFile
-from hcron.library import copytree, get_events_home
 from hcron import globals
-
-def make_events_snapshot():
-    """This depends on python >=v2.5 which creates intermediate
-    directories as required.
-    """
-    globals.config = ConfigFile(HCRON_CONFIG_PATH)
-    events_base_path = globals.config.get("events_base_path", "").strip()
-
-    if events_base_path == "":
-        src = os.path.expanduser("~%s/.hcron/%s/events" % (USER_NAME, HOST_NAME))
-    else:
-        src = os.path.join(events_base_path, USER_NAME, ".hcron/%s/events" % HOST_NAME)
-
-    dst = get_events_home(USER_NAME)
-
-    # paranoia
-    if not dst.startswith(HCRON_EVENTS_SNAPSHOT_HOME):
-        raise Exception("Bad destination")
-
-    shutil.rmtree(dst)
-    copytree(src, dst, USER_ID)
 
 def print_usage(progName):
     print """\
