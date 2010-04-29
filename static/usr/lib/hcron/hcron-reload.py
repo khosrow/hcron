@@ -62,23 +62,15 @@ if __name__ == "__main__":
             sys.exit(-1)
 
     #
-    # setup
+    # work
     #
-    if 0:
-        # plan to move this to something like scheduler
-        try:
-            make_events_snapshot()
-        except:
-            print "Error: Could not copy events."
-            sys.exit(-1)
-
     try:
         signal_reload()
         now = datetime.datetime.now()
         next_interval = (now+datetime.timedelta(seconds=60)).replace(second=0,microsecond=0)
         print "Reload signalled for machine (%s) at next interval (%s; in %ss)." % (HOST_NAME, next_interval, (next_interval-now).seconds)
     except Exception, detail:
-        #print detail
+        print detail
         sys.exit(-1)
 
     sys.exit(0)
