@@ -57,6 +57,8 @@ HCRON_SIGNAL_HOME = HCRON_SPOOL_HOME
 
 HCRON_PID_FILE_PATH = os.path.join(HCRON_VAR_PATH, "run/hcron.pid")
 
+HCRON_TREES_HOME = os.path.join(HCRON_LIB_HOME, "trees")
+
 HCRON_EVENT_DEFINITION_NAMES = [
     "as_user",
     "host",
@@ -84,6 +86,7 @@ CONFIG_MAX_EVENTS_PER_USER = 25             # max_events_per_user
 CONFIG_REMOTE_SHELL_EXEC = "/usr/bin/ssh"   # remote_shell_exec
 CONFIG_REMOTE_SHELL_TYPE = "ssh"            # remote_shell_type
 CONFIG_USE_SYSLOG = False                   # use_syslog
+CONFIG_MAX_HCRON_TREE_SNAPSHOT_SIZE = 2**18 # 256KB
 
 MONTH_NAMES_MAP = {
     "jan": 1,
