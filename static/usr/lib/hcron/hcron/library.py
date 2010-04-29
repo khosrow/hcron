@@ -113,6 +113,29 @@ def list_st_to_bitmask(st, minMax, fullBitmask):
 
     return mask
 
+def copyfile(src_path, dst_path, max_size):
+    """Copy a file up to a max size (typically, for copying to limited
+    space filesystems).
+    """
+    src = open(src_path, "r")
+    dst = open(dst_path, "w")
+
+    try:
+        buf = None
+        while max_size > 0 and buf != "":
+            buf = src.read(2**16)
+            max_size -= len(buf)
+            if max_size < 0:
+                buf = buf[:max_size]
+            dst.write(buf)
+    except Exception, detail:
+        pass
+
+    if src:
+        src.close()
+    if dst:
+        dst.close()
+
 # hcron-specific signature
 def dir_walk(top, topdown=True, onerror=None, ignoreMatchFn=None):
     """This is a slightly modified version of os.walk (python v2.4).
