@@ -31,3 +31,4 @@ signalHome = None
 server = None
 pidFile = None
 eventListList = None
+hcron_tree_cache = None

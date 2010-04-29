@@ -36,8 +36,8 @@ import time
 
 # app imports
 from hcron.constants import *
-import hcron.globals as globals
-from hcron.library import WHEN_BITMASKS, WHEN_INDEXES, WHEN_MIN_MAX, list_st_to_bitmask, dir_walk, get_events_home, get_includes_home
+from hcron.hcrontree import HcronTreeCache, create_user_hcron_tree_file, install_hcron_tree_file
+from hcron.library import WHEN_BITMASKS, WHEN_INDEXES, WHEN_MIN_MAX, list_st_to_bitmask
 from hcron.notify import send_email_notification
 from hcron.execute import remote_execute
 from hcron.logger import *
@@ -56,6 +56,11 @@ def signal_reload():
 
     if userName not in globals.allowedUsers.get():
         raise Exception("Warning: You are not an allowed hcron user.")
+
+    try:
+        create_user_hcron_tree_file(userName, HOST_NAME)
+    except Exception, detail:
+        raise Exception("Error: Could not create hcron snapshot file (%s)." % detail)
 
     try:
         tempfile.mkstemp(prefix=userName, dir=signalHome)
@@ -162,8 +167,12 @@ def reload_events(signalHomeMtime):
             userName = pwd.getpwuid(ownerId).pw_name
 
             if userName not in userNames:
-                globals.eventListList.reload(userName)
-                userNames[userName] = None
+                try:
+                    install_hcron_tree_file(userName, HOST_NAME)
+                    globals.eventListList.reload(userName)
+                    userNames[userName] = None
+                except Exception, detail:
+                    log_message("warning", "Could not install snapshot file for user (%s)." % userName)
 
             try:
                 os.remove(path) # remove singles and multiples
@@ -257,43 +266,34 @@ class EventList:
 
     def load(self):
         self.events = {}
-        eventsHome = get_events_home(self.userName)
-
-        if eventsHome == None:
-            return
 
         try:
-            # allow read even if over NFS with root_squash;
-            # catch any possible exceptions to guarantee seteuid(0)
-            os.seteuid(pwd.getpwnam(self.userName).pw_uid)
-
-            eventsHomeLen = len(eventsHome)
             max_events_per_user = globals.config.get().get("max_events_per_user", CONFIG_MAX_EVENTS_PER_USER)
             names_to_ignore_cregexp = globals.config.get().get("names_to_ignore_cregexp")
             ignoreMatchFn = names_to_ignore_cregexp and names_to_ignore_cregexp.match
 
-            for root, dirNames, fileNames in dir_walk(eventsHome, ignoreMatchFn=ignoreMatchFn):
-                for fileName in fileNames:
-                    path = os.path.join(root, fileName)
+            # global cache assumes single-threaded load!
+            hcron_tree_cache = globals.hcron_tree_cache = HcronTreeCache(self.userName, ignoreMatchFn)
+            for name in hcron_tree_cache.get_event_names():
+                try:
+                    event = Event(name, self.userName)
+                except Exception, detail:
+                    # bad Event definition
+                    pass
+                    #continue
 
-                    try:
-                        name = path[eventsHomeLen:] # keep the initial /
-                        event = Event(path, name, self.userName)
-                    except Exception, detail:
-                        # bad Event definition
-                        pass
-                        #continue
+                self.events[name] = event
 
-                    self.events[name] = event
-
-                    if len(self.events) >= max_events_per_user:
-                        event.reason = "maximum events reached"
-                        log_message("warning", "Reached maximum events allowed (%s)." % max_events_per_user)
+                if len(self.events) >= max_events_per_user:
+                    event.reason = "maximum events reached"
+                    log_message("warning", "Reached maximum events allowed (%s)." % max_events_per_user)
 
         except Exception, detail:
             log_message("error", "Could not load events.")
 
-        os.seteuid(0)  # guarantee return to uid 0
+        # delete any caches (and references) before moving on with or
+        # without an prior exception!
+        hcron_tree_cache = globals.hcron_tree_cache = None
 
         self.dump()
 
@@ -347,8 +347,7 @@ class EventList:
         return events
 
 class Event:
-    def __init__(self, path, name, userName):
-        self.path = path
+    def __init__(self, name, userName):
         self.userName = userName
         self.name = name
         self.reason = None
@@ -359,9 +358,6 @@ class Event:
 
     def get_name(self):
         return self.name
-
-    def get_path(self):
-        return self.path
 
     def get_var_info(self, eventChainNames=None, sched_datetime=None):
         """Set variable values.
@@ -406,8 +402,8 @@ class Event:
 
         return varInfo
 
-    def load_file(self, path):
-        """Load file according to the following:
+    def process_lines(self, lines):
+        """Line processing:
         - non-continuation lines, left-stripped, starting with # are
           discarded
         - lines ending in \ are concatenated, unconditionally, with
@@ -415,8 +411,6 @@ class Event:
         - lines stripped to "" are discarded
         """
         l = []
-
-        lines = open(path, "r").read().split("\n")
         while lines:
             line = lines.pop(0)
             if line.lstrip().startswith("#"):
@@ -430,7 +424,7 @@ class Event:
             l.append(line)
 
         return l
-
+        
     def process_includes(self, lines, depth=1):
         if depth > 3:
             raise Exception("Reached include depth maximum (%s)." % depth)
@@ -440,8 +434,8 @@ class Event:
             t = line.split()
             if len(t) == 2 and t[0] == "include":
                 include_name = t[1]
-                path = self.resolve_include_name_to_path(include_name)
-                lines2 = self.load_file(path)
+                lines2 = globals.hcron_tree_cache.get_include_contents(include_name).split("\n")
+                lines2 = self.process_lines(lines2)
                 lines2 = self.process_includes(lines2, depth+1)
                 l.extend(lines2)
             else:
@@ -458,29 +452,30 @@ class Event:
 
         try:
             try:
-                lines = self.load_file(self.path)
+                lines = globals.hcron_tree_cache.get_event_contents(self.name).split("\n")
+                lines = self.process_lines(lines)
             except Exception, detail:
                 self.reason = "cannot load file"
-                raise CannotLoadFileException("Ignored event file (%s)." % self.path)
+                raise CannotLoadFileException("Ignored event file (%s)." % self.name)
 
             try:
                 lines = self.process_includes(lines)
             except Exception, detail:
                 self.reason = "cannot process include(s)"
-                raise CannotLoadFileException("Ignored event file (%s)." % self.path)
+                raise CannotLoadFileException("Ignored event file (%s)." % self.name)
 
             try:
                 assignments = load_assignments(lines)
             except Exception, detail:
                 self.reason = "bad definition"
-                raise BadEventDefinitionException("Ignored event file (%s)." % self.path)
+                raise BadEventDefinitionException("Ignored event file (%s)." % self.name)
 
             try:
                 # early substitution
                 eval_assignments(assignments, varInfo)
             except Exception, detail:
                 self.reason = "bad variable substitution"
-                raise BadVariableSubstitutionException("Ignored event file (%s)." % self.path)
+                raise BadVariableSubstitutionException("Ignored event file (%s)." % self.name)
 
             # for backward compatibility: rejected events may have
             # invalid when_* settings but assignments otherwise; useful
@@ -492,7 +487,7 @@ class Event:
             # template check (this should preced when_* checks)
             if varInfo["template_name"] == self.name.split("/")[-1]:
                 self.reason = "template"
-                raise TemplateEventDefinitionException("Ignored event file (%s). Template name (%s)." % (self.path, varInfo["template_name"]))
+                raise TemplateEventDefinitionException("Ignored event file (%s). Template name (%s)." % (self.name, varInfo["template_name"]))
     
             # bad definition check
             try:
@@ -502,7 +497,7 @@ class Event:
     
             except Exception, detail:
                 self.reason = "bad when_* setting"
-                raise BadEventDefinitionException("Ignored event file (%s)." % self.path)
+                raise BadEventDefinitionException("Ignored event file (%s)." % self.name)
 
             self.masks = masks
 
@@ -511,7 +506,7 @@ class Event:
                 if name not in varInfo:
                     self.reason = "not fully specified, missing field (%s)" % name
                     raise BadEventDefinitionException("Ignored event file (%s). Missing field (%s)." % \
-                        (self.path, name))
+                        (self.name, name))
 
             self.when = "%s %s %s %s %s %s" % \
                 (varInfo.get("when_year"),
@@ -596,6 +591,13 @@ class Event:
         nextEventName = nextEventName and self.resolve_event_name_to_name(nextEventName.strip()) or None
 
         return nextEventName
+
+    def resolve_include_name_to_name(self, name):
+        if name.startswith("/"):
+            name = os.path.normpath("includes/%s" % name)
+        else:
+            name = None
+        return name
 
     def resolve_include_name_to_path(self, name):
         """Resolve include name relative to the includes/ directory.
