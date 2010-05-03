@@ -37,8 +37,6 @@ stored under 1) each user's home directory, or 2) a special location as
 .nf
 \.hcron/
   <hostName>/
-    includes/
-      <dirs and files>
     events/
       <dirs and files>
   ...
@@ -48,7 +46,7 @@ stored under 1) each user's home directory, or 2) a special location as
 .PP
 From the tree above, the hcron-scheduler loads event definitions which
 correspond to the host on which it is running. Event definitions are read
-from the events/ tree, and include files are read from the includes/ tree.
+from the events/ tree.
 
 .SH EVENT DEFINTION FILE
 .PP
@@ -61,8 +59,8 @@ The following directives are recognized:
 
 .TP
 .B include <name>
-the include file stored under the "includes" directory. <name> should be
-start with a /, and is relative to the "includes" directory.
+the include file stored under the "includes" directory. <name> is any
+valid event name.
 
 .PP
 The following fields are recognized:
@@ -201,10 +199,9 @@ Indexing follows may use the following formats (as in Python): [<index>],
 
 .PP
 Using the "include" directive, event files may include the contents (in
-place) of files stored under the ".../includes" directory. This makes it
+place) of files stored elsewhere under the "events/" directory. This makes it
 easy to collect common settings in one place and "include" them rather
-than enter them in individual event files. The path given to the directive
-must begin with a / .
+than enter them in individual event files.
 
 .SS Template Event Definitions
 
@@ -339,7 +336,7 @@ with an event file tree of as below, with all files exactly as above:
 
 .RS
 .nf
-include /vars
+include /vars~
 as_user=
 host=mymachine.xyz
 ...
