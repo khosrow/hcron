@@ -99,8 +99,8 @@ def log_discard_events(userName, count):
 def log_execute(userName, asUser, host, eventName, retVal):
     log_any("execute", userName, asUser, host, eventName, retVal)
 
-def log_alarm():
-    log_any("alarm")
+def log_alarm(msg):
+    log_any("alarm", "", msg)
 
 def log_notify_email(userName, addrs, eventName):
     log_any("notify-email", userName, addrs, eventName)
