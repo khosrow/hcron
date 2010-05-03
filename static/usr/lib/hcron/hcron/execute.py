@@ -43,10 +43,18 @@ class RemoteExecuteException(Exception):
     pass
 
 def alarm_handler(signum, frame):
+    """Terminate process with pid stashed in module childPid.
+    """
     global childPid
 
-    log_alarm()
+    log_alarm("trying to kill process (%s)" % childPid)
     os.kill(childPid, signal.SIGKILL)
+    time.sleep(1)
+    if os.kill(childPid, 0) == 0:
+        log_alarm("process (%s) killed" % childPid)
+    else:
+        log_alarm("process (%s) could not be killed" % childPid)
+
 
 def remote_execute(eventName, localUserName, remoteUserName, remoteHostName, command, timeout=None):
     """Securely execute a command at remoteUserName@remoteHostName from
