@@ -276,6 +276,9 @@ class EventList:
             hcron_tree_cache = globals.hcron_tree_cache = HcronTreeCache(self.userName, ignoreMatchFn)
             for name in hcron_tree_cache.get_event_names():
                 try:
+                    if hcron_tree_cache.is_ignored_event(name):
+                        continue
+
                     event = Event(name, self.userName)
                 except Exception, detail:
                     # bad Event definition
@@ -425,7 +428,7 @@ class Event:
 
         return l
         
-    def process_includes(self, lines, depth=1):
+    def process_includes(self, caller_name, lines, depth=1):
         if depth > 3:
             raise Exception("Reached include depth maximum (%s)." % depth)
 
@@ -433,10 +436,10 @@ class Event:
         for line in lines:
             t = line.split()
             if len(t) == 2 and t[0] == "include":
-                include_name = t[1]
+                include_name = self.resolve_event_name_to_name(caller_name, t[1])
                 lines2 = globals.hcron_tree_cache.get_include_contents(include_name).split("\n")
                 lines2 = self.process_lines(lines2)
-                lines2 = self.process_includes(lines2, depth+1)
+                lines2 = self.process_includes(include_name, lines2, depth+1)
                 l.extend(lines2)
             else:
                 l.append(line)
@@ -459,7 +462,7 @@ class Event:
                 raise CannotLoadFileException("Ignored event file (%s)." % self.name)
 
             try:
-                lines = self.process_includes(lines)
+                lines = self.process_includes(self.name, lines)
             except Exception, detail:
                 self.reason = "cannot process include(s)"
                 raise CannotLoadFileException("Ignored event file (%s)." % self.name)
@@ -588,40 +591,19 @@ class Event:
             nextEventName = event_failover_event
 
         # handle None, "", and valid string
-        nextEventName = nextEventName and self.resolve_event_name_to_name(nextEventName.strip()) or None
+        nextEventName = nextEventName and self.resolve_event_name_to_name(self.name, nextEventName.strip()) or None
 
         return nextEventName
 
-    def resolve_include_name_to_name(self, name):
-        if name.startswith("/"):
-            name = os.path.normpath("includes/%s" % name)
-        else:
-            name = None
-        return name
-
-    def resolve_include_name_to_path(self, name):
-        """Resolve include name relative to the includes/ directory.
-
-        name _must_ start with /; otherwise return None.
-        """
-        path = None
-        if name.startswith("/"):
-            includes_home = get_includes_home(self.userName)
-            if includes_home:
-                # strip "/" before join
-                path = os.path.join(includes_home, os.path.normpath(name)[1:])
-
-        return path
-
-    def resolve_event_name_to_name(self, name):
-        """Resolve event name relative to the current event.
+    def resolve_event_name_to_name(self, caller_name, name):
+        """Resolve event name relative to the caller event.
         
         1) relative to .../events, if starts with "/"
         2) relative to the current path
         """
         if not name.startswith("/"):
             # absolutize name
-            name = os.path.join("/", os.path.dirname(self.name), name)
+            name = os.path.join("/", os.path.dirname(caller_name), name)
 
         return name
 

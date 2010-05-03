@@ -32,13 +32,12 @@ import tarfile
 
 #
 from constants import *
-import globals
-from library import copyfile
-from logging import *
+from hcron import globals
+from hcron.library import copyfile
+from hcron.logger import *
 
 class HcronTreeCache:
     """Interface to packaged hcron tree file containing members as:
-        includes/...
         events/...
     """
 
@@ -50,29 +49,30 @@ class HcronTreeCache:
         self.username = username
         self.ignore_match_fn = ignore_match_fn or false_match
         self.path = get_hcron_tree_filename(username, HOST_NAME)
+        self.ignored = {}
         self.cache = {}
         self.load()
 
     def load(self):
-        rejected = {}
-        link_cache = {}
-        cache = {}
+        """Load events from hcron tree file:
+        - event files are loaded
+        - symlinks are resolved
+        - ignored are tracked
+        - non-file members are discarded
+        """
         f = tarfile.open(self.path)
 
+        link_cache = {}
+        cache = {}
         for m in f.getmembers():
-            if m.name.startswith("includes/") or m.name.startswith("events/"):
-                if os.path.dirname(m.name) in rejected:
-                    rejected[m.name] = None
-                    continue
-                elif self.ignore_match_fn(os.path.basename(m.name)):
-                    rejected[m.name] = None
-                    continue
-                else:
+            if m.name.startswith("events/"):
                     if m.issym():
                         link_cache[m.name] = self.resolve_symlink(m.name, m.linkname)
                     elif m.isfile():
                         cache[m.name] = f.extractfile(m).read()
-
+                    else:
+                        # need to track
+                        cache[m.name] = None
         f.close()
 
         # resolve for symlinks
@@ -87,7 +87,20 @@ class HcronTreeCache:
                     # not found; drop
                     break
 
+        # mark ignored
+        ignored = {}
+        for name in sorted(cache.keys()):
+            if (os.path.dirname(name) in ignored) or self.ignore_match_fn(os.path.basename(name)):
+                ignored[name] = None
+                #del cache[name]
+
+        # discard non-files
+        for name in cache.keys():
+            if cache[name] == None:
+                del cache[name]
+
         self.cache = cache
+        self.ignored = ignored
 
     def resolve_symlink(self, name, linkname):
         if linkname.startswith("/"):
@@ -102,23 +115,24 @@ class HcronTreeCache:
             return None
 
     def get_include_contents(self, name):
+        """Kept for backward compatibility with v0.14. Discard for v0.16.
+        """
         if name.startswith("/"):
-            return self.get_contents(os.path.normpath("includes/"+name))
+            st = self.get_contents(os.path.normpath("includes/"+name))
+            if st == None:
+                st = self.get_contents(os.path.normpath("events/"+name))
+            return st
         else:
             return None
+
+    def is_ignored_event(self, name):
+        return os.path.normpath("events/"+name) in self.ignored
 
     def get_event_names(self):
         names = []
         for name in self.cache.keys():
-            if name.startswith("events"):
+            if name.startswith("events/"):
                 names.append(name[6:])
-        return names
-
-    def get_include_names(self):
-        names = []
-        for name in self.cache.keys():
-            if name.startswith("includes"):
-                names.append(name[8:])
         return names
 
     def get_names(self):
@@ -154,7 +168,7 @@ def create_user_hcron_tree_file(username, hostname, dst_path=None):
     if dst_path == None:
         dst_path = get_user_hcron_tree_filename(username, hostname)
 
-    names = [ "includes", "events" ]
+    names = [ "events" ]
     cwd = os.getcwd()
     f = None
 
@@ -165,7 +179,10 @@ def create_user_hcron_tree_file(username, hostname, dst_path=None):
         os.chdir(get_user_hcron_tree_home(username, hostname))
         f = tarfile.open(dst_path, "w:gz")
         for name in names:
-            f.add(name)
+            try:
+                f.add(name)
+            except:
+                pass
         f.close()
     except:
         if f:
