@@ -27,8 +27,10 @@
 # system imports
 import os
 import os.path
+import pwd
 import shutil
 import tarfile
+import tempfile
 
 #
 from constants import *
@@ -173,17 +175,25 @@ def create_user_hcron_tree_file(username, hostname, dst_path=None):
     f = None
 
     try:
-        if os.path.exists(dst_path):
-            os.remove(dst_path)
+        # temp file
+        user_hcron_tree_home = get_user_hcron_tree_home(username, hostname)
+        _, tmp_path = tempfile.mkstemp(prefix="snapshot-", dir=user_hcron_tree_home)
 
-        os.chdir(get_user_hcron_tree_home(username, hostname))
-        f = tarfile.open(dst_path, "w:gz")
+        # create tar
+        os.chdir(user_hcron_tree_home)
+        f = tarfile.open(tmp_path, mode="w:gz")
         for name in names:
             try:
                 f.add(name)
             except:
                 pass
         f.close()
+
+        # move into place
+        if os.path.exists(dst_path):
+            # in case following move() is not atomic
+            os.remove(dst_path)
+        shutil.move(tmp_path, dst_path)
     except:
         if f:
             f.close()
@@ -195,17 +205,30 @@ def create_user_hcron_tree_file(username, hostname, dst_path=None):
 
 def install_hcron_tree_file(username, hostname):
     """Install/replace an hcron file for use by hcron-scheduler.
+
+    SECURITY: src must be read as user, dst written as "root".
     """
     system_ht_home = get_hcron_tree_home(username, hostname)
-    src = get_user_hcron_tree_filename(username, hostname)
-    dst = get_hcron_tree_filename(username, hostname)
+    src_path = get_user_hcron_tree_filename(username, hostname)
+    dst_path = get_hcron_tree_filename(username, hostname)
 
     if not os.path.exists(system_ht_home):
         os.makedirs(system_ht_home)
 
-    if os.path.exists(dst):
-        os.remove(dst)
+    try:
+        uid = pwd.getpwnam(username).pw_uid
+        os.seteuid(uid)
+        src = open(src_path, "r")
+    except:
+        os.seteuid(0)
+        raise
+
+    os.seteuid(0)
+    try:
+        os.remove(dst_path)
+    except:
+        pass
 
     max_hcron_tree_snapshot_size = globals.config.get().get("max_hcron_tree_snapshot_size", CONFIG_MAX_HCRON_TREE_SNAPSHOT_SIZE)
-    copyfile(src, dst, max_hcron_tree_snapshot_size)
+    copyfile(src, dst_path, max_hcron_tree_snapshot_size)
 

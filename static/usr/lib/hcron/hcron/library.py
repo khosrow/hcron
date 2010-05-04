@@ -26,6 +26,7 @@
 
 # system imports
 import os.path
+import types
 
 # app imports
 from hcron.constants import *
@@ -113,12 +114,17 @@ def list_st_to_bitmask(st, minMax, fullBitmask):
 
     return mask
 
-def copyfile(src_path, dst_path, max_size):
+def copyfile(src, dst, max_size):
     """Copy a file up to a max size (typically, for copying to limited
-    space filesystems).
+    space filesystems). src and dst may be pathnames (if string type)
+    or file objects; this allows for the src and dst to be accessed by
+    different users (i.e., via seteuid as required by NFS with
+    root_squash).
     """
-    src = open(src_path, "r")
-    dst = open(dst_path, "w")
+    if type(src) in types.StringTypes:
+        src = open(src, "r")
+    if type(dst) in types.StringTypes:
+        dst = open(dst, "w")
 
     try:
         buf = None
