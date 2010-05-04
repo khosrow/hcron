@@ -47,14 +47,20 @@ def alarm_handler(signum, frame):
     """
     global childPid
 
-    log_alarm("trying to kill process (%s)" % childPid)
-    os.kill(childPid, signal.SIGKILL)
-    time.sleep(1)
-    if os.kill(childPid, 0) == 0:
+    log_alarm("process (%s) to be killed" % childPid)
+    try:
+        os.kill(childPid, signal.SIGKILL)
         log_alarm("process (%s) killed" % childPid)
-    else:
-        log_alarm("process (%s) could not be killed" % childPid)
+        return
+    except:
+        pass
 
+    try:
+        time.sleep(1)
+        os.kill(childPid, 0)
+        log_alarm("process (%s) could not be killed" % childPid)
+    except:
+        pass
 
 def remote_execute(eventName, localUserName, remoteUserName, remoteHostName, command, timeout=None):
     """Securely execute a command at remoteUserName@remoteHostName from
