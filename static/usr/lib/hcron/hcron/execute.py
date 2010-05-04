@@ -104,7 +104,8 @@ def remote_execute(eventName, localUserName, remoteUserName, remoteHostName, com
     retVal = -1
     if command != "":
         try:
-            args = [ remote_shell_exec, "-f", "-t", "-l", remoteUserName, remoteHostName, command ]
+            #args = [ remote_shell_exec, "-f", "-t", "-l", remoteUserName, remoteHostName, command ]
+            args = [ remote_shell_exec, "-n", "-t", "-l", remoteUserName, remoteHostName, command ]
             childPid = os.fork()
 
             if childPid == 0:
@@ -150,7 +151,7 @@ def remote_execute(eventName, localUserName, remoteUserName, remoteHostName, com
                 signal.signal(signal.SIGALRM, signal.SIG_IGN) # cancel alarm
 
             if os.WIFSIGNALED(waitStatus):
-                retVal = -1
+                retVal = -2
 
             elif os.WIFEXITED(waitStatus):
                 retVal = (os.WEXITSTATUS(waitStatus) == 255) and -1 or 0
