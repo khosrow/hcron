@@ -1,4 +1,4 @@
-.TH HCRON-SCHEDULER "8" "May 2010" "hcron 0.15" ""
+.TH HCRON-SCHEDULER "8" "October 2010" "hcron 0.16" ""
 .SH NAME
 hcron-scheduler \- Server which schedules and executes hcron events
 .SH SYNOPSIS
@@ -95,6 +95,13 @@ files when editing).
 .B smtp_server
 Host name of an SMTP server willing to accept connections. If not
 specified, localhost is used.
+
+.TP
+.B test_net_username
+A username of a network account (i.e., for which user information is
+served by YP/NIS, LDAP, etc.). This is used to test the status of said
+service in case a lookup for user information fails which could be
+because the service is inaccessible or the user does not exist.
 
 .TP
 .B use_syslog

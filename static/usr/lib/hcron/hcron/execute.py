@@ -4,7 +4,7 @@
 
 # GPL--start
 # This file is part of hcron
-# Copyright (C) 2008, 2009 Environment/Environnement Canada
+# Copyright (C) 2008-2010 Environment/Environnement Canada
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -26,7 +26,6 @@
 
 # system imports
 import os
-import pwd
 import signal
 import subprocess
 import time
@@ -35,6 +34,7 @@ import time
 from hcron.constants import *
 import hcron.globals as globals
 from hcron.logger import *
+from hcron import fspwd as pwd
 
 # global
 childPid = None
@@ -104,8 +104,8 @@ def remote_execute(eventName, localUserName, remoteUserName, remoteHostName, com
     retVal = -1
     if command != "":
         try:
-            #args = [ remote_shell_exec, "-f", "-t", "-l", remoteUserName, remoteHostName, command ]
-            args = [ remote_shell_exec, "-n", "-t", "-l", remoteUserName, remoteHostName, command ]
+            args = [ remote_shell_exec, "-f", "-n", "-t", "-l", remoteUserName, remoteHostName, command ]
+            #args = [ remote_shell_exec, "-n", "-t", "-l", remoteUserName, remoteHostName, command ]
             childPid = os.fork()
 
             if childPid == 0:

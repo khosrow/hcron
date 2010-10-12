@@ -4,7 +4,7 @@
 
 # GPL--start
 # This file is part of hcron
-# Copyright (C) 2008, 2009 Environment/Environnement Canada
+# Copyright (C) 2008-2010 Environment/Environnement Canada
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -26,9 +26,11 @@
 
 # system imports
 import os.path
-import pwd
 import socket
 import sys
+
+# special
+from hcron import fspwd as pwd
 
 # constants
 PROG_NAME = os.path.basename(sys.argv[0])

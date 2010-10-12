@@ -4,7 +4,7 @@
 
 # GPL--start
 # This file is part of hcron
-# Copyright (C) 2008, 2009 Environment/Environnement Canada
+# Copyright (C) 2008-2010 Environment/Environnement Canada
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -29,7 +29,6 @@ from datetime import datetime
 import fnmatch
 import os
 import os.path
-import pwd
 import re
 import stat
 import time
@@ -41,6 +40,7 @@ from hcron.library import WHEN_BITMASKS, WHEN_INDEXES, WHEN_MIN_MAX, list_st_to_
 from hcron.notify import send_email_notification
 from hcron.execute import remote_execute
 from hcron.logger import *
+from hcron import fspwd as pwd
 
 def signal_reload():
     """Signal to reload.

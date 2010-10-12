@@ -27,7 +27,6 @@
 # system imports
 import os
 import os.path
-import pwd
 import shutil
 import tarfile
 import tempfile
@@ -37,6 +36,7 @@ from constants import *
 from hcron import globals
 from hcron.library import copyfile
 from hcron.logger import *
+from hcron import fspwd as pwd
 
 class HcronTreeCache:
     """Interface to packaged hcron tree file containing members as:
@@ -64,10 +64,19 @@ class HcronTreeCache:
         """
         f = tarfile.open(self.path)
 
+        ignored = {}
         link_cache = {}
         cache = {}
+
         for m in f.getmembers():
             if m.name.startswith("events/"):
+                name = os.path.normpath(m.name)
+                basename = os.path.basename(name)
+                dirname = os.path.dirname(name)
+
+                if self.ignore_match_fn(basename) or dirname in ignored:
+                    ignored[name] = None
+                else:
                     if m.issym():
                         link_cache[m.name] = self.resolve_symlink(m.name, m.linkname)
                     elif m.isfile():
@@ -89,11 +98,9 @@ class HcronTreeCache:
                     # not found; drop
                     break
 
-        # mark ignored
-        ignored = {}
-        for name in sorted(cache.keys()):
-            if (os.path.dirname(name) in ignored) or self.ignore_match_fn(os.path.basename(name)):
-                ignored[name] = None
+        # discard ignored
+        #for name in ignored.keys():
+            #if name in cache:
                 #del cache[name]
 
         # discard non-files
