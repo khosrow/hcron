@@ -32,11 +32,11 @@ import pwd
 import time
 
 #
-from hcron import globals
+from hcron import globls
 
 def test_service():
     # check if network service is really answering
-    test_net_username = globals.config.get().get("test_net_username")
+    test_net_username = globls.config.get().get("test_net_username")
     if test_net_username == None:
         time.sleep(5)
     else:
@@ -45,8 +45,8 @@ def test_service():
             try:
                 test_pw = pwd.getpwnam(test_net_username)
                 break
-            except Exception:
-                time.sleep(1)
+            except Exception, detail:
+                time.sleep(3)
 
 def getpwnam(name):
     """Wrapper for pwd.getpwnam().
@@ -67,11 +67,11 @@ def getpwnam(name):
             pw = pwd.getpwnam(name)
             break
         except Exception, detail:
-            log_message("info", "Error getting user information with getpwnam() for username (%s)." % name)
+            pass
 
             try_count += 1
             if try_count > 5:
-                raise
+                raise Exception("Error getting user information with getpwnam() for username (%s)." % name)
 
             test_service()
 
@@ -84,12 +84,15 @@ def getpwuid(uid):
             pw = pwd.getpwuid(uid)
             break
         except Exception, detail:
-            log_message("info", "Error getting user information with getpwuid() for uid (%s)." % uid)
+            pass
 
             try_count += 1
             if try_count > 5:
-                raise
+                raise Exception("Error getting user information with getpwuid() for uid (%s)." % uid)
 
             test_service()
 
     return pw
+
+
+

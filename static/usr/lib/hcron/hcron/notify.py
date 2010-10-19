@@ -4,7 +4,7 @@
 
 # GPL--start
 # This file is part of hcron
-# Copyright (C) 2008, 2009 Environment/Environnement Canada
+# Copyright (C) 2008-2010 Environment/Environnement Canada
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -29,11 +29,11 @@ import smtplib
 
 # app imports
 from hcron.constants import *
-import hcron.globals as globals
+from hcron import globls
 from hcron.logger import *
 
 def send_email_notification(eventName, fromUserName, toAddr, subject, content):
-    config = globals.config.get()
+    config = globls.config.get()
     smtp_server = config.get("smtp_server", "localhost")
 
     fromAddr = "%s@%s" % (fromUserName, HOST_NAME)

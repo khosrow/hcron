@@ -1,10 +1,10 @@
 #! /usr/bin/env python
 #
-# globals.py
+# globls.py
 
 # GPL--start
 # This file is part of hcron
-# Copyright (C) 2008, 2009 Environment/Environnement Canada
+# Copyright (C) 2008-2010 Environment/Environnement Canada
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -21,7 +21,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 # GPL--end
 
-"""Globals. Should be imported as "import hcron.globals as globals".
+"""Globals. Should be imported as "from hcron import globls".
 """
 
 config = None

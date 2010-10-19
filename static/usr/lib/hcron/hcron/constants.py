@@ -26,11 +26,9 @@
 
 # system imports
 import os.path
+import pwd
 import socket
 import sys
-
-# special
-from hcron import fspwd as pwd
 
 # constants
 PROG_NAME = os.path.basename(sys.argv[0])
@@ -125,7 +123,7 @@ CRONTAB_ALIASES_MAP = {
     "@hourly": "0 * * * *",
 }
 
-# at invocation
+# at invocation (user should be root)
 USER_ID = os.getuid()
 USER_NAME = pwd.getpwuid(USER_ID).pw_name
 HOST_NAME = socket.getfqdn()

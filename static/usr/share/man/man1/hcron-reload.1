@@ -5,13 +5,16 @@ hcron-reload \- Signal hcron-scheduler to reload user hcron event definition fil
 .B hcron-reload
 
 .SH DESCRIPTION
-hcron-reload signals to the hcron-scheduler that the user's hcron event
-definition files should be reloaded. This step is necessary in order
-for any changes to take effect.
+hcron-reload creates a "snapshot" of the hcron event definition tree and
+signals to the hcron-scheduler that it should reload the user's event
+information. This step is necessary in order for any changes to take effect.
 
 .SH FILES
 .IP /var/lib/hcron/event_lists/<username>
 Lists the current event lists of the associated user according to the format:
+
+.IP /var/lib/hcron/trees/<username>
+Local copy of the each user's event definition tree snapshot.
 
 .RS
 .nf
@@ -27,7 +30,7 @@ hcron(7), hcron-event(1), hcron-scheduler(8)
 Written by John Marshall.
 
 .SH "REPORTING BUGS"
-Report bugs to <xyz@xyz>.
+Report bugs to: <http://code.google.com/p/hcron/>.
 
 .SH COPYRIGHT
 Copyright \(co 2008-2010 Environment Canada.

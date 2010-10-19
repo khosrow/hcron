@@ -4,7 +4,7 @@
 
 # GPL--start
 # This file is part of hcron
-# Copyright (C) 2008, 2009 Environment/Environnement Canada
+# Copyright (C) 2008-2010 Environment/Environnement Canada
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -30,7 +30,7 @@ import types
 
 # app imports
 from hcron.constants import *
-import hcron.globals as globals
+from hcron import globls
 
 #
 # bitmasks makes for easy comparisons (bitwise-and), where each value
@@ -209,7 +209,7 @@ def copytree(src, dst, srcUid):
 def get_events_home(userName):
     """Returns the user-specific events/ directory path.
     """
-    config = globals.config.get()
+    config = globls.config.get()
     events_base_path = (config.get("events_base_path") or "").strip()
 
     if events_base_path == "":
@@ -225,7 +225,7 @@ def get_events_home(userName):
 def get_includes_home(userName):
     """Returns the user-specific includes/ directory path.
     """
-    config = globals.config.get()
+    config = globls.config.get()
     events_base_path = (config.get("events_base_path") or "").strip()
 
     if events_base_path == "":

@@ -35,6 +35,7 @@ import time
 
 # app imports
 from hcron.constants import *
+from hcron import globls
 from hcron.hcrontree import HcronTreeCache, create_user_hcron_tree_file, install_hcron_tree_file
 from hcron.library import WHEN_BITMASKS, WHEN_INDEXES, WHEN_MIN_MAX, list_st_to_bitmask
 from hcron.notify import send_email_notification
@@ -48,13 +49,13 @@ def signal_reload():
     import tempfile
     from hcron.file import AllowedUsersFile, ConfigFile
 
-    globals.config = ConfigFile(HCRON_CONFIG_PATH)
-    globals.allowedUsers = AllowedUsersFile(HCRON_ALLOW_PATH)
-    config = globals.config.get()
+    globls.config = ConfigFile(HCRON_CONFIG_PATH)
+    globls.allowedUsers = AllowedUsersFile(HCRON_ALLOW_PATH)
+    config = globls.config.get()
     signalHome = config.get("signalHome") or HCRON_SIGNAL_HOME
     userName = pwd.getpwuid(os.getuid()).pw_name
 
-    if userName not in globals.allowedUsers.get():
+    if userName not in globls.allowedUsers.get():
         raise Exception("Warning: You are not an allowed hcron user.")
 
     try:
@@ -84,8 +85,8 @@ def handle_events(events, sched_datetime):
     """
     childPids = {}
 
-    max_activated_events = max(globals.config.get().get("max_activated_events", CONFIG_MAX_ACTIVATED_EVENTS), 1)
-    max_chain_events = max(globals.config.get().get("max_chain_events", CONFIG_MAX_CHAIN_EVENTS), 1)
+    max_activated_events = max(globls.config.get().get("max_activated_events", CONFIG_MAX_ACTIVATED_EVENTS), 1)
+    max_chain_events = max(globls.config.get().get("max_chain_events", CONFIG_MAX_CHAIN_EVENTS), 1)
 
     for event in events:
         while len(childPids) >= max_activated_events:
@@ -128,7 +129,7 @@ def handle_events(events, sched_datetime):
                     log_message("error", "Event chain limit (%s) reached at (%s)." % (max_chain_events, nextEventName), user_name=event.userName)
                     break
                 else:
-                    eventList = globals.eventListList.get(event.userName)
+                    eventList = globls.eventListList.get(event.userName)
                     nextEvent = eventList and eventList.get(nextEventName)
 
                     # problem cases for nextEvent
@@ -169,7 +170,7 @@ def reload_events(signalHomeMtime):
             if userName not in userNames:
                 try:
                     install_hcron_tree_file(userName, HOST_NAME)
-                    globals.eventListList.reload(userName)
+                    globls.eventListList.reload(userName)
                     userNames[userName] = None
                 except Exception, detail:
                     log_message("warning", "Could not install snapshot file for user (%s)." % userName)
@@ -268,12 +269,12 @@ class EventList:
         self.events = {}
 
         try:
-            max_events_per_user = globals.config.get().get("max_events_per_user", CONFIG_MAX_EVENTS_PER_USER)
-            names_to_ignore_cregexp = globals.config.get().get("names_to_ignore_cregexp")
+            max_events_per_user = globls.config.get().get("max_events_per_user", CONFIG_MAX_EVENTS_PER_USER)
+            names_to_ignore_cregexp = globls.config.get().get("names_to_ignore_cregexp")
             ignoreMatchFn = names_to_ignore_cregexp and names_to_ignore_cregexp.match
 
             # global cache assumes single-threaded load!
-            hcron_tree_cache = globals.hcron_tree_cache = HcronTreeCache(self.userName, ignoreMatchFn)
+            hcron_tree_cache = globls.hcron_tree_cache = HcronTreeCache(self.userName, ignoreMatchFn)
             for name in hcron_tree_cache.get_event_names():
                 try:
                     if hcron_tree_cache.is_ignored_event(name):
@@ -296,7 +297,7 @@ class EventList:
 
         # delete any caches (and references) before moving on with or
         # without an prior exception!
-        hcron_tree_cache = globals.hcron_tree_cache = None
+        hcron_tree_cache = globls.hcron_tree_cache = None
 
         self.dump()
 
@@ -437,7 +438,7 @@ class Event:
             t = line.split()
             if len(t) == 2 and t[0] == "include":
                 include_name = self.resolve_event_name_to_name(caller_name, t[1])
-                lines2 = globals.hcron_tree_cache.get_include_contents(include_name).split("\n")
+                lines2 = globls.hcron_tree_cache.get_include_contents(include_name).split("\n")
                 lines2 = self.process_lines(lines2)
                 lines2 = self.process_includes(include_name, lines2, depth+1)
                 l.extend(lines2)
@@ -455,7 +456,7 @@ class Event:
 
         try:
             try:
-                lines = globals.hcron_tree_cache.get_event_contents(self.name).split("\n")
+                lines = globls.hcron_tree_cache.get_event_contents(self.name).split("\n")
                 lines = self.process_lines(lines)
             except Exception, detail:
                 self.reason = "cannot load file"

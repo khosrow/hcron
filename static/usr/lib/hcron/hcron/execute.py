@@ -32,7 +32,7 @@ import time
 
 # app imports
 from hcron.constants import *
-import hcron.globals as globals
+from hcron import globls
 from hcron.logger import *
 from hcron import fspwd as pwd
 
@@ -79,12 +79,12 @@ def remote_execute(eventName, localUserName, remoteUserName, remoteHostName, com
     global childPid
 
     # setup
-    config = globals.config.get()
+    config = globls.config.get()
     allow_localhost = config.get("allow_localhost", CONFIG_ALLOW_LOCALHOST) 
     localUid = pwd.getpwnam(localUserName).pw_uid
     remote_shell_type = config.get("remote_shell_type", CONFIG_REMOTE_SHELL_TYPE)
     remote_shell_exec = config.get("remote_shell_exec", CONFIG_REMOTE_SHELL_EXEC)
-    timeout = timeout or globals.config.get().get("command_spawn_timeout", CONFIG_COMMAND_SPAWN_TIMEOUT)
+    timeout = timeout or globls.config.get().get("command_spawn_timeout", CONFIG_COMMAND_SPAWN_TIMEOUT)
     command = command.strip()
 
     # validate

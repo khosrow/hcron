@@ -7,7 +7,7 @@
 
 # GPL--start
 # This file is part of hcron
-# Copyright (C) 2008, 2009 Environment/Environnement Canada
+# Copyright (C) 2008-2010 Environment/Environnement Canada
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -30,7 +30,7 @@ import logging
 
 # app imports
 from hcron.constants import *
-import hcron.globals as globals
+from hcron import globls
 
 # globals
 logger = None
@@ -38,7 +38,7 @@ logger = None
 def setup_logger():
     global logger
 
-    config = globals.config.get()
+    config = globls.config.get()
     if config.get("use_syslog", CONFIG_USE_SYSLOG):
         handler = logging.SysLogHandler()
     else:

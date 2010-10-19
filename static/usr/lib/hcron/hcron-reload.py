@@ -4,7 +4,7 @@
 
 # GPL--start
 # This file is part of hcron
-# Copyright (C) 2008, 2009 Environment/Environnement Canada
+# Copyright (C) 2008-2010 Environment/Environnement Canada
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -37,7 +37,7 @@ import sys
 from hcron.constants import *
 from hcron.event import signal_reload
 from hcron.file import ConfigFile
-from hcron import globals
+from hcron import globls
 
 def print_usage(progName):
     print """\

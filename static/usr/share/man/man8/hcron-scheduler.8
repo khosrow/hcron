@@ -116,8 +116,9 @@ As in Python, empty lines and those starting with # are ignored.
 The hcron spool directory is accessible to all users within which signal
 files can be created using hcron-reload. At the start of each scheduling
 period, the signal files are checked. For each signal file, the event
-definition files of its owner are reloaded. Then, the signal files are
-removed. The worst case reload wait is just short of two scheduling periods.
+definition files (the snapshot) of its owner are reloaded. Then, the
+signal files are removed. The worst case reload wait is just short of
+two scheduling periods.
 
 .SH EXAMPLES
 .PP
@@ -161,8 +162,11 @@ See HCRON.ALLOW above.
 See HCRON.CONF above.
 
 .IP /var/lib/hcron/event_lists/<username>
-Lists the current event lists of the associated user according to the format (see hcron-reload).
-
+See hcron-reload.
+ 
+.IP /var/lib/hcron/trees/<username>
+See hcron-reload.
+ 
 .IP /var/log/hcron/hcron.log
 Default location of the log file (when use_syslog is False).
 
@@ -177,7 +181,7 @@ hcron(7), hcron-event(1), hcron-reload(1)
 Written by John Marshall.
 
 .SH "REPORTING BUGS"
-Report bugs to <xyz@xyz>.
+Report bugs to: <http://code.google.com/p/hcron/>.
 
 .SH COPYRIGHT
 Copyright \(co 2008-2010 Environment Canada.

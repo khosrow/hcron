@@ -4,7 +4,7 @@
 
 # GPL--start
 # This file is part of hcron
-# Copyright (C) 2008, 2009 Environment/Environnement Canada
+# Copyright (C) 2008-2010 Environment/Environnement Canada
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -40,7 +40,7 @@ import signal
 
 # app imports
 from hcron.constants import *
-import hcron.globals as globals
+from hcron import globls
 from hcron.event import EventListList
 from hcron.file import AllowedUsersFile, ConfigFile, PidFile, SignalHome
 from hcron.logger import *
@@ -53,7 +53,7 @@ def dump_signal_handler(num, frame):
 
     # config
     try:
-        config = globals.config.get()
+        config = globls.config.get()
         f = open(HCRON_CONFIG_DUMP_PATH, "w+")
         f.write(pp.pformat(config))
         f.close()
@@ -63,7 +63,7 @@ def dump_signal_handler(num, frame):
 
     # allowed users
     try:
-        allowedUsers = globals.allowedUsers.get()
+        allowedUsers = globls.allowedUsers.get()
         f = open(HCRON_ALLOWED_USERS_DUMP_PATH, "w+")
         f.write("\n".join(allowedUsers))
         f.close()
@@ -72,7 +72,7 @@ def dump_signal_handler(num, frame):
             f.close()
 
     # event list
-    for userName in globals.allowedUsers.get():
+    for userName in globls.allowedUsers.get():
         el = ell.eventLists.get(userName)
         if el:
             el.dump()
@@ -80,11 +80,11 @@ def dump_signal_handler(num, frame):
 def reload_signal_handler(num, frame):
     log_message("info", "Received signal to reload.")
     signal.signal(num, reload_signal_handler)
-    globals.eventListList.load(globals.allowedUsers.get())
+    globls.eventListList.load(globls.allowedUsers.get())
 
 def quit_signal_handler(num, frame):
     log_message("info", "Received signal to exit.")
-    globals.pidFile.remove()
+    globls.pidFile.remove()
     sys.exit(0)
 
 def print_usage(progName):
@@ -123,11 +123,11 @@ if __name__ == "__main__":
     #
     # setup
     #
-    globals.config = ConfigFile(HCRON_CONFIG_PATH)
+    globls.config = ConfigFile(HCRON_CONFIG_PATH)
     setup_logger()
-    globals.allowedUsers = AllowedUsersFile(HCRON_ALLOW_PATH)
-    globals.signalHome = SignalHome(HCRON_SIGNAL_HOME)
-    globals.eventListList = EventListList(globals.allowedUsers.get())
+    globls.allowedUsers = AllowedUsersFile(HCRON_ALLOW_PATH)
+    globls.signalHome = SignalHome(HCRON_SIGNAL_HOME)
+    globls.eventListList = EventListList(globls.allowedUsers.get())
 
     signal.signal(signal.SIGHUP, reload_signal_handler)
     #signal.signal(signal.SIGUSR1, dump_signal_handler)
@@ -135,14 +135,14 @@ if __name__ == "__main__":
     signal.signal(signal.SIGQUIT, quit_signal_handler)
     ###signal.signal(signal.SIGCHLD, signal.SIG_IGN)   # we don't care about children/zombies
 
-    globals.server = Server()
-    globals.server.serverize()  # don't catch SystemExit
-    globals.pidFile = PidFile(HCRON_PID_FILE_PATH)
-    globals.pidFile.create()
+    globls.server = Server()
+    globls.server.serverize()  # don't catch SystemExit
+    globls.pidFile = PidFile(HCRON_PID_FILE_PATH)
+    globls.pidFile.create()
 
     try:
         log_start()
-        globals.server.run()
+        globls.server.run()
     except Exception, detail:
         log_message("warning", "Unexpected exception (%s)." % detail)
         #import traceback
@@ -150,6 +150,6 @@ if __name__ == "__main__":
         #print detail
         pass
 
-    globals.pidFile.remove()
+    globls.pidFile.remove()
     log_exit()
     sys.exit(-1)

@@ -52,7 +52,8 @@ from the events/ tree.
 .PP
 Each event definition is contained in a single, plain text file. Each
 line consists of a name=value setting. Empty lines and those starting
-with # are ignored. There is no support for line continuation.
+with # are ignored. Lines ending with a \ are concatenated with the following
+line (line continuation).
 
 .PP
 The following directives are recognized:
@@ -354,7 +355,7 @@ hcron(7), hcron-info(1), hcron-reload(1), hcron-scheduler(8)
 Written by John Marshall.
 
 .SH "REPORTING BUGS"
-Report bugs to <xyz@xyz>.
+Report bugs to: <http://code.google.com/p/hcron/>.
 
 .SH COPYRIGHT
 Copyright \(co 2008-2010 Environment Canada.

@@ -4,7 +4,7 @@
 
 # GPL--start
 # This file is part of hcron
-# Copyright (C) 2008, 2009 Environment/Environnement Canada
+# Copyright (C) 2008-2010 Environment/Environnement Canada
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -32,7 +32,7 @@ from time import sleep, time
 
 # app imports
 from hcron.constants import *
-import hcron.globals as globals
+from hcron import globls
 from hcron.event import EventListList, handle_events, reload_events
 from hcron.library import date_to_bitmasks
 from hcron.logger import *
@@ -91,23 +91,23 @@ class Server:
             #
             # check and update as necessary
             #
-            if globals.config.is_modified():
+            if globls.config.is_modified():
                 ### this is a problem if we are behind schedule!!!
                 log_message("info", "hcron.conf was modified")
                 # restart
-                globals.pidFile.remove()
+                globls.pidFile.remove()
                 if "--immediate" not in sys.argv:
                     # do not miss current "now" time
                     sys.argv.append("--immediate")
                 os.execv(sys.argv[0], sys.argv)
-            if globals.allowedUsers.is_modified():
+            if globls.allowedUsers.is_modified():
                 log_message("info", "hcron.allow was modified")
-                globals.allowedUsers.load()
-                globals.eventListList = EventListList(globals.allowedUsers.get())
-            if globals.signalHome.is_modified():
+                globls.allowedUsers.load()
+                globls.eventListList = EventListList(globls.allowedUsers.get())
+            if globls.signalHome.is_modified():
                 log_message("info", "signalHome was modified")
-                globals.signalHome.load()
-                reload_events(globals.signalHome.get_modified_time())
+                globls.signalHome.load()
+                reload_events(globls.signalHome.get_modified_time())
 
             self.run_now(next)
 
@@ -121,7 +121,7 @@ class Server:
         # hcron: 0=sun - 6=sat; isoweekday: 1=mon = 7=sun
         hcronWeekday = now.isoweekday() % 7
         datemasks = date_to_bitmasks(now.year, now.month, now.day, now.hour, now.minute, hcronWeekday)
-        events = globals.eventListList.test(datemasks)
+        events = globls.eventListList.test(datemasks)
         if events:
             handle_events(events, sched_datetime=now)
         log_work(len(events), (time()-t0))
