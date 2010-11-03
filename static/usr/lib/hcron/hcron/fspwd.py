@@ -37,16 +37,14 @@ from hcron import globls
 def test_service():
     # check if network service is really answering
     test_net_username = globls.config.get().get("test_net_username")
-    if test_net_username == None:
-        time.sleep(5)
-    else:
+    if test_net_username:
         # test with know username until success
         while True:
             try:
                 test_pw = pwd.getpwnam(test_net_username)
                 break
             except Exception, detail:
-                time.sleep(3)
+                time.sleep(1)
 
 def getpwnam(name):
     """Wrapper for pwd.getpwnam().
