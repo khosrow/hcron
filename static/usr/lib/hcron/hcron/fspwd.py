@@ -59,36 +59,25 @@ def getpwnam(name):
     the test name is virtually 0, so that we can confidently say whether
     a failure is service related or a real, non-existent user error.
     """
-    try_count = 0
-    while True:
+    for try_count in range(5):
         try:
-            pw = pwd.getpwnam(name)
+            pw = pwd.getpwname(name)
             break
-        except Exception, detail:
-            pass
-
-            try_count += 1
-            if try_count > 5:
-                raise Exception("Error getting user information with getpwnam() for username (%s)." % name)
-
+        except:
             test_service()
+    else:
+        raise Exception("Error getting user information with getpwnam() for username (%s)." % name)
 
     return pw
 
 def getpwuid(uid):
-    try_count = 0
-    while True:
+    for try_count in range(5):
         try:
             pw = pwd.getpwuid(uid)
-            break
-        except Exception, detail:
-            pass
-
-            try_count += 1
-            if try_count > 5:
-                raise Exception("Error getting user information with getpwuid() for uid (%s)." % uid)
-
+        except:
             test_service()
+    else:
+        raise Exception("Error getting user information with getpwuid() for uid (%s)." % uid)
 
     return pw
 
