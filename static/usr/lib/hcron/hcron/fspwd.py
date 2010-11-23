@@ -70,7 +70,7 @@ def getpwnam(name):
         test_net_retry = CONFIG_TEST_NET_RETRY
     for try_count in range(test_net_retry):
         try:
-            pw = pwd.getpwname(name)
+            pw = pwd.getpwnam(name)
             break
         except:
             test_service()
@@ -87,6 +87,7 @@ def getpwuid(uid):
     for try_count in range(test_net_retry):
         try:
             pw = pwd.getpwuid(uid)
+            break
         except:
             test_service()
     else:
