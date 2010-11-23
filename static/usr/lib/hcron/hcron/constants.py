@@ -87,6 +87,8 @@ CONFIG_REMOTE_SHELL_EXEC = "/usr/bin/ssh"   # remote_shell_exec
 CONFIG_REMOTE_SHELL_TYPE = "ssh"            # remote_shell_type
 CONFIG_USE_SYSLOG = False                   # use_syslog
 CONFIG_MAX_HCRON_TREE_SNAPSHOT_SIZE = 2**18 # 256KB
+CONFIG_TEST_NET_DELAY = 1                   # test_net_delay
+CONFIG_TEST_NET_RETRY = 5                   # test_net_retry
 
 MONTH_NAMES_MAP = {
     "jan": 1,

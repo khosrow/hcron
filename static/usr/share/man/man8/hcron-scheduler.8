@@ -97,6 +97,15 @@ Host name of an SMTP server willing to accept connections. If not
 specified, localhost is used.
 
 .TP
+.B test_net_delay
+Time to wait between retries of the test of the naming service.
+
+.TP
+.B test_net_retry
+Number of times to retry to determine if the naming service is
+available.
+
+.TP
 .B test_net_username
 A username of a network account (i.e., for which user information is
 served by YP/NIS, LDAP, etc.). This is used to test the status of said

@@ -32,11 +32,16 @@ import pwd
 import time
 
 #
+from hcron.constants import *
 from hcron import globls
 
 def test_service():
     # check if network service is really answering
     test_net_username = globls.config.get().get("test_net_username")
+    try:
+        test_net_delay = globls.config.get().getint("test_net_delay") or CONFIG_TEST_NET_DELAY
+    except:
+        test_net_delay = CONFIG_TEST_NET_DELAY
     if test_net_username:
         # test with know username until success
         while True:
@@ -44,7 +49,7 @@ def test_service():
                 test_pw = pwd.getpwnam(test_net_username)
                 break
             except Exception, detail:
-                time.sleep(1)
+                time.sleep(test_net_delay)
 
 def getpwnam(name):
     """Wrapper for pwd.getpwnam().
@@ -59,7 +64,11 @@ def getpwnam(name):
     the test name is virtually 0, so that we can confidently say whether
     a failure is service related or a real, non-existent user error.
     """
-    for try_count in range(5):
+    try:
+        test_net_retry = globls.config.get().getint("test_net_retry") or CONFIG_TEST_NET_RETRY
+    except:
+        test_net_retry = CONFIG_TEST_NET_RETRY
+    for try_count in range(test_net_retry):
         try:
             pw = pwd.getpwname(name)
             break
@@ -71,7 +80,11 @@ def getpwnam(name):
     return pw
 
 def getpwuid(uid):
-    for try_count in range(5):
+    try:
+        test_net_retry = globls.config.get().getint("test_net_retry") or CONFIG_TEST_NET_RETRY
+    except:
+        test_net_retry = CONFIG_TEST_NET_RETRY
+    for try_count in range(test_net_retry):
         try:
             pw = pwd.getpwuid(uid)
         except:
