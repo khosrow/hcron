@@ -90,15 +90,21 @@ def handle_events(events, sched_datetime):
 
     for event in events:
         while len(childPids) >= max_activated_events:
-            # reap immediate children: block-wait for first, clean up others without waiting
-            pid, status = os.waitpid(0, 0)
-            del childPids[pid]
-
-            if len(childPids):
-                pid, status = os.waitpid(0, os.WNOHANG)
+            # reap 1+ child processes
+            try:
+                # block-wait for one
+                pid, status = os.waitpid(-1, 0)
                 while pid != 0:
                     del childPids[pid]
-                    pid, status = os.waitpid(0, os.WNOHANG)
+                    # opportunistic clean up others without waiting
+                    pid, status = os.waitpid(-1, os.WNOHANG)
+            except OSError, detail:
+                log_message("warning", "Unexpected exception (%s)." % str(detail))
+                if detail.errno == errno.ECHILD:
+                    childPids = []
+            except Exception, detail:
+                traceback.print_exc()
+                log_message("error", "Unexpected exception (%s)." % str(detail))
 
         pid = os.fork()
         childPids[pid] = None
@@ -147,9 +153,14 @@ def handle_events(events, sched_datetime):
             # parent
             pass
 
+    # reap remaining child processes
     while childPids:
-        pid, status = os.waitpid(0, 0)
-        del childPids[pid]
+        try:
+            pid, status = os.waitpid(-1, 0)
+            del childPids[pid]
+        except Exception, detail"
+            traceback.print_exc()
+            log_message("error", "Unexpected exception (%s)." % str(detail))
 
 def reload_events(signalHomeMtime):
     """Reload events for all users whose signal file mtime is <= to

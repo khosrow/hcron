@@ -111,6 +111,8 @@ class Server:
 
             self.run_now(next)
 
+    # TODO: should run_now fork so that the child handled the "now"
+    # events and the parent returns to wait for the next "now"?
     def run_now(self, now):
         """Run using the "now" time value.
         """
