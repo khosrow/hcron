@@ -158,7 +158,7 @@ def handle_events(events, sched_datetime):
         try:
             pid, status = os.waitpid(-1, 0)
             del childPids[pid]
-        except Exception, detail"
+        except Exception, detail:
             traceback.print_exc()
             log_message("error", "Unexpected exception (%s)." % str(detail))
 
