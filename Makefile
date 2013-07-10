@@ -14,5 +14,6 @@ install:
 	(cd static; tar cf - etc/*) | (cd ${INSTALL_DIR}; tar xvf -)
 	(cd static; tar cf - usr/bin/*) | (cd ${INSTALL_DIR}; tar xvf -)
 	(cd static; tar cf - usr/lib/hcron/*) | (cd ${INSTALL_DIR}; tar xvf -)
+	(cd static; tar cf - usr/sbin/*) | (cd ${INSTALL_DIR}; tar xvf -)
 	(cd static; tar cf - usr/share/*) | (cd ${INSTALL_DIR}; tar xvf -)
 	(cd static; tar cf - var/*) | (cd ${INSTALL_DIR}; tar xvf -)
