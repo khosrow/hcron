@@ -81,6 +81,7 @@ def remote_execute(eventName, localUserName, remoteUserName, remoteHostName, com
     # setup
     config = globls.config.get()
     allow_localhost = config.get("allow_localhost", CONFIG_ALLOW_LOCALHOST) 
+    allow_root_events = config.get("allow_root_events", CONFIG_ALLOW_ROOT_EVENTS)
     localUid = pwd.getpwnam(localUserName).pw_uid
     remote_shell_type = config.get("remote_shell_type", CONFIG_REMOTE_SHELL_TYPE)
     remote_shell_exec = config.get("remote_shell_exec", CONFIG_REMOTE_SHELL_EXEC)
@@ -94,7 +95,7 @@ def remote_execute(eventName, localUserName, remoteUserName, remoteHostName, com
     if remoteHostName == "":
         raise RemoteExecuteException("Missing host name for event (%s)." % eventName)
 
-    if localUid == 0:
+    if not allow_root_events and localUid == 0:
         raise RemoteExecuteException("Root user not allowed to execute.")
 
     if remote_shell_type != "ssh":

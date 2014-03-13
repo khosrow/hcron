@@ -77,6 +77,7 @@ HCRON_EVENT_DEFINITION = "\n".join([ "%s=" % name for name in HCRON_EVENT_DEFINI
 HCRON_EVENT_DEFINITION_MAP = dict([ (name, "") for name in HCRON_EVENT_DEFINITION_NAMES ])
 
 CONFIG_ALLOW_LOCALHOST = False              # allow_localhost
+CONFIG_ALLOW_ROOT_EVENTS = False            # allow_root_events
 CONFIG_COMMAND_SPAWN_TIMEOUT = 15           # command_spawn_timeout
 CONFIG_LOG_PATH = os.path.join(HCRON_LOG_HOME, "hcron.log") # log_path
 CONFIG_MAX_ACTIVATED_EVENTS = 20            # max_activated_events
