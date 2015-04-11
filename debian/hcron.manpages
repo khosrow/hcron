@@ -1,6 +1,6 @@
-doc/man1/hcron-conv.1
-doc/man1/hcron-event.1
-doc/man1/hcron-info.1
-doc/man1/hcron-reload.1
-doc/man7/hcron.7
-doc/man8/hcron-scheduler.8
+doc/hcron-conv.1
+doc/hcron-event.1
+doc/hcron-info.1
+doc/hcron-reload.1
+doc/hcron.7
+doc/hcron-scheduler.8
