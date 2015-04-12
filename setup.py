@@ -1,7 +1,5 @@
 from setuptools import setup
 
-import hcron
-
 setup(
     name='hcron',
     # version=hcron.__version__,
