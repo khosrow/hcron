@@ -208,7 +208,7 @@ Where --to-crontab options are:
                     "host" entry is not empty. The default is ssh.
 """ % (progName, progName, progName)
 
-if __name__ == "__main__":
+def main():
     args = sys.argv[1:]
     if len(args) < 1 or args[0] in [ "-h", "--help" ]:
         print_usage(PROG_NAME)
@@ -228,4 +228,7 @@ if __name__ == "__main__":
         sys.stderr.write("%s\n" % detail)
         sys.exit(-1)
 
-    sys.exit(0)
+    sys.exit(0) 
+
+if __name__ == "__main__":
+    main()

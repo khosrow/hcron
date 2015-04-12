@@ -77,7 +77,7 @@ def print_user_event_status():
     except Exception, detail:
         print "Error: Could not read event status information."
 
-if __name__ == "__main__":
+def main():
     args = sys.argv[1:]
 
     if len(args) == 0:
@@ -107,3 +107,6 @@ if __name__ == "__main__":
         else:
             print_usage(PROG_NAME)
             sys.exit(-1)
+
+if __name__ == "__main__":
+    main()

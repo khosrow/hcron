@@ -102,7 +102,7 @@ Options:
                     immediately (i.e., now, the current interval)
                     rather than wait for the next interval""" % progName
 
-if __name__ == "__main__":
+def main():
     progName = os.path.basename(sys.argv[0])
 
     #
@@ -153,3 +153,6 @@ if __name__ == "__main__":
     globls.pidFile.remove()
     log_exit()
     sys.exit(-1)
+
+if __name__ == "__main__":
+    main()
