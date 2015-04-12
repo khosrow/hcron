@@ -52,4 +52,6 @@ hcron event files (called hello_dolly):
   when_minute=0
   when_dow=2
 
-Using hcron means never needing to check the crontab man page to remember the field order. But there is more to hcron than a key=value approach. See the docs for more.
+Using hcron means never needing to check the crontab man page to remember the field order. But there is more to hcron than a key=value approach. See the docs_ for more.
+
+.. _docs: https://expl.info/display/HCRON/Home
