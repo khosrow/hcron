@@ -1,0 +1,2 @@
+doc/samples/hcron.conf.sample /etc/hcron
+doc/samples/hcron.allow.sample /etc/hcron
