@@ -1,0 +1,5 @@
+hcron (0.17.2-1) unstable; urgency=medium
+
+  * repackaged version, follows debian standards more closely
+
+ -- Khosrow Ebrahimpour <khosrow@khosrow.ca> Sun, 12 Apr 2015 00:48:09 +0000
