@@ -4,8 +4,8 @@ import hcron
 
 setup(
     name='hcron',
-    # version=dscp.__version__,
-    # author=dscp.__author__,
+    # version=hcron.__version__,
+    # author=hcron.__author__,
     author_email='John.Marshall@ec.gc.ca',
     packages=['hcron'],
     url='https://bitbucket.org/hcron/hcron',
