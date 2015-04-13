@@ -17,12 +17,12 @@
 
 PID_FILE_PATH="/var/run/hcron.pid"
 
-test -f /usr/sbin/hcron-scheduler || exit 0
+test -f /usr/bin/hcron-scheduler || exit 0
 
 start() {
-    #start-stop-daemon --start --quiet --pidfile /var/run/hcron.pid --name hcron --startas /usr/sbin/hcron-scheduler -- $LSBNAMES
+    #start-stop-daemon --start --quiet --pidfile /var/run/hcron.pid --name hcron --startas /usr/bin/hcron-scheduler -- $LSBNAMES
     #test ! -f "${PID_FILE_PATH}" || exit 0
-    /usr/sbin/hcron-scheduler
+    /usr/bin/hcron-scheduler
 }
 
 stop() {
@@ -33,7 +33,7 @@ stop() {
 
 restart() {
     #start-stop-daemon --stop --retry 5 --quiet --pidfile /var/run/hcron.pid --name hcron
-    #start-stop-daemon --start --quiet --pidfile /var/run/hcron.pid --name hcron --startas /usr/sbin/hcron-scheduler -- $LSBNAMES
+    #start-stop-daemon --start --quiet --pidfile /var/run/hcron.pid --name hcron --startas /usr/bin/hcron-scheduler -- $LSBNAMES
     stop
     start
 }
