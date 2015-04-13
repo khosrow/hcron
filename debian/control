@@ -1,9 +1,14 @@
-Package: hcron
+Source: hcron
 Section: admin
 Priority: optional
+Maintainer: John Marshall <John.Marshall@ec.gc.ca>
+Build-Depends: debhelper (>= 4.2.32)
+Vcs-Git: https://bitbucket.org/hcron/hcron
+
+Package: hcron
 Architecture: all
 Depends: python (>=2.3)
-Maintainer: John Marshall <John.Marshall@ec.gc.ca>
+Homepage: https://code.google.com/p/hcron/
 Description: Hcron event scheduling tool
  Hcron does provides a similar service to the regular cron with
  the addition of:
