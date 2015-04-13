@@ -13,10 +13,11 @@ setup(
     description='Hcron event scheduling tool',
     entry_points={
         'console_scripts': [
-            'hcron-conv = hcron.hcron_conv:main',
-            'hcron-event = hcron.hcron_even:main',
-            'hcron-info = hcron.hcron_info:main',
-            'hcron-reload = hcron.hcron_reload:main'
+            'hcron-conv = hcron.scripts.hcron_conv:main',
+            'hcron-event = hcron.scripts.hcron_event:main',
+            'hcron-info = hcron.scripts.hcron_info:main',
+            'hcron-reload = hcron.scripts.hcron_reload:main',
+            'hcron-scheduler = hcron.scripts.hcron_scheduler:main'
         ],
     },
 )
