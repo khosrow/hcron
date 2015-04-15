@@ -1,4 +1,4 @@
-hcron (0.17.2-1) unstable; urgency=medium
+hcron (0.18-1) unstable; urgency=medium
 
   * repackaged version, follows debian standards more closely
 
