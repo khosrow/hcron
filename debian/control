@@ -7,7 +7,7 @@ Vcs-Git: https://bitbucket.org/hcron/hcron
 
 Package: hcron
 Architecture: all
-Depends: python (>=2.3)
+Depends: ${misc:Depends}, ${python:Depends}
 Homepage: https://code.google.com/p/hcron/
 Description: Hcron event scheduling tool
  Hcron does provides a similar service to the regular cron with
