@@ -4,7 +4,7 @@ import hcron
 
 setup(
     name='hcron',
-    version='0.17.2',
+    version='0.18',
     author='John Marshall',
     author_email='John.Marshall@ec.gc.ca',
     packages=find_packages(),
