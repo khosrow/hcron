@@ -50,7 +50,7 @@ Where:
 -c                  create only, do not edit
 -y|-n               reload or do not reload after create/edit""" % (progName, progName)
 
-if __name__ == "__main__":
+def main():
     args = sys.argv[1:]
     createOnly = False
     reload = None
@@ -104,5 +104,7 @@ if __name__ == "__main__":
     
         except Exception, detail:
             #print detail
-            sys.exit(-1)
+            sys.exit(-1)  
 
+if __name__ == "__main__":
+    main()

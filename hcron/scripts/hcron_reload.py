@@ -1,4 +1,3 @@
-#! /usr/bin/env python
 #
 # hcron-reload.py
 
@@ -46,7 +45,7 @@ usage: %s
 Signal to the hcron-scheduler running of the local machine to reload
 one's event defintion files.""" % progName
 
-if __name__ == "__main__":
+def main():
     progName = os.path.basename(sys.argv[0])
 
     #
@@ -74,3 +73,6 @@ if __name__ == "__main__":
         sys.exit(-1)
 
     sys.exit(0)
+
+if __name__ == "__main__":
+    main()
